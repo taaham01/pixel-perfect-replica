@@ -16,7 +16,7 @@ export function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-sm border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lift">
       <Link to="/vehicles/$slug" params={{ slug }} className="relative block aspect-[3/2] overflow-hidden bg-muted">
-        <img src={v.images[0]} alt={`${v.year} ${v.make} ${v.model} ${v.variant}`} loading="lazy" width={1280} height={864}
+        <img src={v.images[0] ?? ""} alt={`${v.year} ${v.make} ${v.model} ${v.variant}`} loading="lazy" width={1280} height={864}
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
         <span className="absolute left-3 top-3 rounded-sm bg-ink/85 px-2 py-1 font-mono text-[0.68rem] tracking-wider text-ink-foreground backdrop-blur">#{v.stockId}</span>
         {v.availability !== "available" && (
@@ -73,7 +73,7 @@ export function VehicleGrid({ vehicles }: { vehicles: Vehicle[] }) {
 /* ---------- Form controls ---------- */
 export const fieldCls = "h-11 w-full rounded-sm border border-input bg-card px-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/70 focus:border-crimson focus:ring-2 focus:ring-crimson/15";
 
-export function SelectField({ label, value, onChange, options, placeholder = "Any" }: { label: string; value?: string | number; onChange: (v: string) => void; options: (string | { value: string; label: string })[]; placeholder?: string }) {
+export function SelectField({ label, value, onChange, options, placeholder = "Any" }: { label: string; value?: string | number | undefined; onChange: (v: string) => void; options: (string | { value: string; label: string })[]; placeholder?: string }) {
   return (
     <label className="block">
       <span className="eyebrow mb-2 block text-muted-foreground">{label}</span>
@@ -158,7 +158,7 @@ export function VehicleGallery({ images, alt }: { images: string[]; alt: string 
   return (
     <div>
       <div className="aspect-[3/2] overflow-hidden rounded-sm bg-muted">
-        <img key={i} src={images[i]} alt={alt} width={1280} height={864} className="h-full w-full animate-in fade-in object-cover duration-500" />
+        <img key={i} src={images[i] ?? ""} alt={alt} width={1280} height={864} className="h-full w-full animate-in fade-in object-cover duration-500" />
       </div>
       {images.length > 1 && (
         <div className="mt-3 grid grid-cols-4 gap-3 sm:grid-cols-5">

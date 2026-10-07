@@ -72,16 +72,16 @@ export const fuels: Fuel[] = ["Petrol", "Diesel", "Hybrid"];
 export const transmissions: Transmission[] = ["Automatic", "Manual"];
 
 export interface VehicleFilters {
-  q?: string;
-  make?: string;
-  model?: string;
-  minYear?: number;
-  maxPrice?: number;
-  maxMileage?: number;
-  transmission?: string;
-  fuel?: string;
-  body?: string;
-  sort?: "newest" | "price-asc" | "price-desc" | "mileage";
+  q?: string | undefined;
+  make?: string | undefined;
+  model?: string | undefined;
+  minYear?: number | undefined;
+  maxPrice?: number | undefined;
+  maxMileage?: number | undefined;
+  transmission?: string | undefined;
+  fuel?: string | undefined;
+  body?: string | undefined;
+  sort?: "newest" | "price-asc" | "price-desc" | "mileage" | undefined;
 }
 
 export function filterVehicles(list: Vehicle[], f: VehicleFilters) {

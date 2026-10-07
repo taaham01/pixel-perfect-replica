@@ -11,7 +11,7 @@ export function vehicleWhatsappMessage(name: string, stockId: string) {
 export function WhatsAppButton() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const m = pathname.match(/^\/vehicles\/([^/]+)$/);
-  const v = m ? getVehicleBySlug(m[1]) : undefined;
+  const v = m ? getVehicleBySlug(m[1] ?? "") : undefined;
   const href = whatsappLink(v ? vehicleWhatsappMessage(vehicleName(v), v.stockId) : "Hello, I would like to ask about exporting a vehicle from Japan.");
   return (
     <a href={href} target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp"
