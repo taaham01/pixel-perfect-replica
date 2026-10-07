@@ -35,8 +35,8 @@ export function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
         <dl className="mt-5 grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-border pt-4 text-sm">
           <Spec icon={Gauge} label={formatKm(v.mileage)} />
           <Spec icon={Settings2} label={v.transmission} />
-          <Spec icon={FuelIcon} label={`${v.fuel} · ${v.engine.split(" ")[0]}`} />
-          <Spec icon={MapPin} label={v.location.split(",")[0]} />
+          <Spec icon={FuelIcon} label={`${v.fuel} · ${v.engine.split(" ")[0] ?? ""}`} />
+          <Spec icon={MapPin} label={v.location.split(",")[0] ?? v.location} />
         </dl>
         <div className="mt-auto flex items-end justify-between gap-3 pt-6">
           <div>
