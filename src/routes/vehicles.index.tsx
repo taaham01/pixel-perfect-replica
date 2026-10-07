@@ -11,7 +11,7 @@ const num = (v: unknown) => (v === undefined || v === "" || isNaN(Number(v)) ? u
 const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
 
 export const Route = createFileRoute("/vehicles/")({
-  validateSearch: (s: Record<string, unknown>): VehicleFilters => ({
+  validateSearch: (s: Partial<Record<keyof VehicleFilters, unknown>>): VehicleFilters => ({
     q: str(s.q), make: str(s.make), model: str(s.model), transmission: str(s.transmission), fuel: str(s.fuel), body: str(s.body),
     minYear: num(s.minYear), maxPrice: num(s.maxPrice), maxMileage: num(s.maxMileage),
     sort: (["newest", "price-asc", "price-desc", "mileage"] as const).find((x) => x === s.sort),

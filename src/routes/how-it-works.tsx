@@ -18,7 +18,7 @@ const faqs = [
   ["Which documents will I receive?", "Typically an export certificate, bill of lading and commercial invoice. Requirements vary by country and our team will advise."],
   ["Can you arrange pre-export inspection?", "Yes, where required by the destination country, inspection can be arranged before shipment."],
   ["How do I pay?", "Payment instructions are provided with your confirmed invoice. Our team will walk you through each step."],
-];
+] as const;
 
 function HowPage() {
   return (
