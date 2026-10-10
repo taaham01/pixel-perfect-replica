@@ -64,7 +64,13 @@ function Home() {
             <SectionHeader eyebrow="Inventory" title="Featured Vehicles" subtitle="Explore vehicles currently available for international export." />
             <Link to="/vehicles" className={btn({ variant: "outline" })}>View All Vehicles <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          <Reveal><VehicleGrid vehicles={featured} /></Reveal>
+          <Reveal><VehicleGrid vehicles={featured} empty={
+            <div className="rounded-sm border border-dashed border-border px-6 py-16 text-center">
+              <p className="text-lg font-semibold">New stock is being added.</p>
+              <p className="mt-2 text-muted-foreground">Tell us the vehicle you want and our team in Japan will source it.</p>
+              <Link to="/request-a-car" className={btn({ variant: "primary" }) + " mt-6"}>Request a Car</Link>
+            </div>
+          } /></Reveal>
         </div>
       </section>
 
