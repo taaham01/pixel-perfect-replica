@@ -19,6 +19,7 @@ import { Route as RequestACarRouteImport } from './routes/request-a-car'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VehiclesIndexRouteImport } from './routes/vehicles.index'
 import { Route as VehiclesSlugRouteImport } from './routes/vehicles.$slug'
+import { Route as ApiPublicImagesSplatRouteImport } from './routes/api/public/images.$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +71,11 @@ const VehiclesSlugRoute = VehiclesSlugRouteImport.update({
   path: '/vehicles/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicImagesSplatRoute = ApiPublicImagesSplatRouteImport.update({
+  id: '/api/public/images/$',
+  path: '/api/public/images/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles/': typeof VehiclesIndexRoute
+  '/api/public/images/$': typeof ApiPublicImagesSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles': typeof VehiclesIndexRoute
+  '/api/public/images/$': typeof ApiPublicImagesSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles/': typeof VehiclesIndexRoute
+  '/api/public/images/$': typeof ApiPublicImagesSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/vehicles/$slug'
     | '/vehicles/'
+    | '/api/public/images/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/vehicles/$slug'
     | '/vehicles'
+    | '/api/public/images/$'
   id:
     | '__root__'
     | '/'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/vehicles/$slug'
     | '/vehicles/'
+    | '/api/public/images/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,6 +170,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   VehiclesSlugRoute: typeof VehiclesSlugRoute
   VehiclesIndexRoute: typeof VehiclesIndexRoute
+  ApiPublicImagesSplatRoute: typeof ApiPublicImagesSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VehiclesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/images/$': {
+      id: '/api/public/images/$'
+      path: '/api/public/images/$'
+      fullPath: '/api/public/images/$'
+      preLoaderRoute: typeof ApiPublicImagesSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -246,6 +266,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   VehiclesSlugRoute: VehiclesSlugRoute,
   VehiclesIndexRoute: VehiclesIndexRoute,
+  ApiPublicImagesSplatRoute: ApiPublicImagesSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
