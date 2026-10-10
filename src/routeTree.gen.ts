@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DealersRouteImport } from './routes/dealers'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
@@ -18,18 +20,35 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RequestACarRouteImport } from './routes/request-a-car'
 import { Route as SoldCarsRouteImport } from './routes/sold-cars'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
+import { Route as AdminSetupRouteImport } from './routes/admin.setup'
 import { Route as VehiclesIndexRouteImport } from './routes/vehicles.index'
 import { Route as VehiclesSlugRouteImport } from './routes/vehicles.$slug'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminSoldRouteImport } from './routes/_authenticated/admin/sold'
+import { Route as AuthenticatedAdminVehiclesIndexRouteImport } from './routes/_authenticated/admin/vehicles.index'
+import { Route as AuthenticatedAdminVehiclesNewRouteImport } from './routes/_authenticated/admin/vehicles.new'
 import { Route as ApiPublicImagesSplatRouteImport } from './routes/api/public/images.$'
+import { Route as AuthenticatedAdminVehiclesIdEditRouteImport } from './routes/_authenticated/admin/vehicles.$id.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -67,6 +86,21 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSetupRoute = AdminSetupRouteImport.update({
+  id: '/admin/setup',
+  path: '/admin/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VehiclesIndexRoute = VehiclesIndexRouteImport.update({
   id: '/vehicles/',
   path: '/vehicles/',
@@ -77,15 +111,44 @@ const VehiclesSlugRoute = VehiclesSlugRouteImport.update({
   path: '/vehicles/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminSoldRoute = AuthenticatedAdminSoldRouteImport.update({
+  id: '/sold',
+  path: '/sold',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminVehiclesIndexRoute =
+  AuthenticatedAdminVehiclesIndexRouteImport.update({
+    id: '/vehicles/',
+    path: '/vehicles/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminVehiclesNewRoute =
+  AuthenticatedAdminVehiclesNewRouteImport.update({
+    id: '/vehicles/new',
+    path: '/vehicles/new',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const ApiPublicImagesSplatRoute = ApiPublicImagesSplatRouteImport.update({
   id: '/api/public/images/$',
   path: '/api/public/images/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminVehiclesIdEditRoute =
+  AuthenticatedAdminVehiclesIdEditRouteImport.update({
+    id: '/vehicles/$id/edit',
+    path: '/vehicles/$id/edit',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/dealers': typeof DealersRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -93,13 +156,22 @@ export interface FileRoutesByFullPath {
   '/request-a-car': typeof RequestACarRoute
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles/': typeof VehiclesIndexRoute
+  '/admin/sold': typeof AuthenticatedAdminSoldRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/vehicles/new': typeof AuthenticatedAdminVehiclesNewRoute
   '/api/public/images/$': typeof ApiPublicImagesSplatRoute
+  '/admin/vehicles/': typeof AuthenticatedAdminVehiclesIndexRoute
+  '/admin/vehicles/$id/edit': typeof AuthenticatedAdminVehiclesIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/dealers': typeof DealersRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -107,14 +179,23 @@ export interface FileRoutesByTo {
   '/request-a-car': typeof RequestACarRoute
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles': typeof VehiclesIndexRoute
+  '/admin/sold': typeof AuthenticatedAdminSoldRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/vehicles/new': typeof AuthenticatedAdminVehiclesNewRoute
   '/api/public/images/$': typeof ApiPublicImagesSplatRoute
+  '/admin/vehicles': typeof AuthenticatedAdminVehiclesIndexRoute
+  '/admin/vehicles/$id/edit': typeof AuthenticatedAdminVehiclesIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/dealers': typeof DealersRoute
   '/how-it-works': typeof HowItWorksRoute
@@ -122,15 +203,24 @@ export interface FileRoutesById {
   '/request-a-car': typeof RequestACarRoute
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/admin/login': typeof AdminLoginRoute
+  '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles/': typeof VehiclesIndexRoute
+  '/_authenticated/admin/sold': typeof AuthenticatedAdminSoldRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/vehicles/new': typeof AuthenticatedAdminVehiclesNewRoute
   '/api/public/images/$': typeof ApiPublicImagesSplatRoute
+  '/_authenticated/admin/vehicles/': typeof AuthenticatedAdminVehiclesIndexRoute
+  '/_authenticated/admin/vehicles/$id/edit': typeof AuthenticatedAdminVehiclesIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/about'
+    | '/auth'
     | '/contact'
     | '/dealers'
     | '/how-it-works'
@@ -138,13 +228,22 @@ export interface FileRouteTypes {
     | '/request-a-car'
     | '/sold-cars'
     | '/terms'
+    | '/admin'
+    | '/admin/login'
+    | '/admin/setup'
     | '/vehicles/$slug'
     | '/vehicles/'
+    | '/admin/sold'
+    | '/admin/'
+    | '/admin/vehicles/new'
     | '/api/public/images/$'
+    | '/admin/vehicles/'
+    | '/admin/vehicles/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/auth'
     | '/contact'
     | '/dealers'
     | '/how-it-works'
@@ -152,13 +251,22 @@ export interface FileRouteTypes {
     | '/request-a-car'
     | '/sold-cars'
     | '/terms'
+    | '/admin/login'
+    | '/admin/setup'
     | '/vehicles/$slug'
     | '/vehicles'
+    | '/admin/sold'
+    | '/admin'
+    | '/admin/vehicles/new'
     | '/api/public/images/$'
+    | '/admin/vehicles'
+    | '/admin/vehicles/$id/edit'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/about'
+    | '/auth'
     | '/contact'
     | '/dealers'
     | '/how-it-works'
@@ -166,14 +274,24 @@ export interface FileRouteTypes {
     | '/request-a-car'
     | '/sold-cars'
     | '/terms'
+    | '/_authenticated/admin'
+    | '/admin/login'
+    | '/admin/setup'
     | '/vehicles/$slug'
     | '/vehicles/'
+    | '/_authenticated/admin/sold'
+    | '/_authenticated/admin/'
+    | '/_authenticated/admin/vehicles/new'
     | '/api/public/images/$'
+    | '/_authenticated/admin/vehicles/'
+    | '/_authenticated/admin/vehicles/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   DealersRoute: typeof DealersRoute
   HowItWorksRoute: typeof HowItWorksRoute
@@ -181,6 +299,8 @@ export interface RootRouteChildren {
   RequestACarRoute: typeof RequestACarRoute
   SoldCarsRoute: typeof SoldCarsRoute
   TermsRoute: typeof TermsRoute
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminSetupRoute: typeof AdminSetupRoute
   VehiclesSlugRoute: typeof VehiclesSlugRoute
   VehiclesIndexRoute: typeof VehiclesIndexRoute
   ApiPublicImagesSplatRoute: typeof ApiPublicImagesSplatRoute
@@ -195,11 +315,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -251,6 +385,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/setup': {
+      id: '/admin/setup'
+      path: '/admin/setup'
+      fullPath: '/admin/setup'
+      preLoaderRoute: typeof AdminSetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vehicles/': {
       id: '/vehicles/'
       path: '/vehicles'
@@ -265,6 +420,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VehiclesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/sold': {
+      id: '/_authenticated/admin/sold'
+      path: '/sold'
+      fullPath: '/admin/sold'
+      preLoaderRoute: typeof AuthenticatedAdminSoldRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/vehicles/': {
+      id: '/_authenticated/admin/vehicles/'
+      path: '/vehicles'
+      fullPath: '/admin/vehicles/'
+      preLoaderRoute: typeof AuthenticatedAdminVehiclesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/vehicles/new': {
+      id: '/_authenticated/admin/vehicles/new'
+      path: '/vehicles/new'
+      fullPath: '/admin/vehicles/new'
+      preLoaderRoute: typeof AuthenticatedAdminVehiclesNewRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/api/public/images/$': {
       id: '/api/public/images/$'
       path: '/api/public/images/$'
@@ -272,12 +455,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicImagesSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/vehicles/$id/edit': {
+      id: '/_authenticated/admin/vehicles/$id/edit'
+      path: '/vehicles/$id/edit'
+      fullPath: '/admin/vehicles/$id/edit'
+      preLoaderRoute: typeof AuthenticatedAdminVehiclesIdEditRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminSoldRoute: typeof AuthenticatedAdminSoldRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminVehiclesNewRoute: typeof AuthenticatedAdminVehiclesNewRoute
+  AuthenticatedAdminVehiclesIndexRoute: typeof AuthenticatedAdminVehiclesIndexRoute
+  AuthenticatedAdminVehiclesIdEditRoute: typeof AuthenticatedAdminVehiclesIdEditRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminSoldRoute: AuthenticatedAdminSoldRoute,
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+    AuthenticatedAdminVehiclesNewRoute: AuthenticatedAdminVehiclesNewRoute,
+    AuthenticatedAdminVehiclesIndexRoute: AuthenticatedAdminVehiclesIndexRoute,
+    AuthenticatedAdminVehiclesIdEditRoute:
+      AuthenticatedAdminVehiclesIdEditRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   DealersRoute: DealersRoute,
   HowItWorksRoute: HowItWorksRoute,
@@ -285,6 +511,8 @@ const rootRouteChildren: RootRouteChildren = {
   RequestACarRoute: RequestACarRoute,
   SoldCarsRoute: SoldCarsRoute,
   TermsRoute: TermsRoute,
+  AdminLoginRoute: AdminLoginRoute,
+  AdminSetupRoute: AdminSetupRoute,
   VehiclesSlugRoute: VehiclesSlugRoute,
   VehiclesIndexRoute: VehiclesIndexRoute,
   ApiPublicImagesSplatRoute: ApiPublicImagesSplatRoute,
