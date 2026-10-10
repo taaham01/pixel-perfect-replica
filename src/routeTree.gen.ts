@@ -16,6 +16,7 @@ import { Route as DealersRouteImport } from './routes/dealers'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RequestACarRouteImport } from './routes/request-a-car'
+import { Route as SoldCarsRouteImport } from './routes/sold-cars'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VehiclesIndexRouteImport } from './routes/vehicles.index'
 import { Route as VehiclesSlugRouteImport } from './routes/vehicles.$slug'
@@ -56,6 +57,11 @@ const RequestACarRoute = RequestACarRouteImport.update({
   path: '/request-a-car',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SoldCarsRoute = SoldCarsRouteImport.update({
+  id: '/sold-cars',
+  path: '/sold-cars',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy': typeof PrivacyRoute
   '/request-a-car': typeof RequestACarRoute
+  '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles/': typeof VehiclesIndexRoute
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy': typeof PrivacyRoute
   '/request-a-car': typeof RequestACarRoute
+  '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles': typeof VehiclesIndexRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy': typeof PrivacyRoute
   '/request-a-car': typeof RequestACarRoute
+  '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles/': typeof VehiclesIndexRoute
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy'
     | '/request-a-car'
+    | '/sold-cars'
     | '/terms'
     | '/vehicles/$slug'
     | '/vehicles/'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy'
     | '/request-a-car'
+    | '/sold-cars'
     | '/terms'
     | '/vehicles/$slug'
     | '/vehicles'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy'
     | '/request-a-car'
+    | '/sold-cars'
     | '/terms'
     | '/vehicles/$slug'
     | '/vehicles/'
@@ -167,6 +179,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   PrivacyRoute: typeof PrivacyRoute
   RequestACarRoute: typeof RequestACarRoute
+  SoldCarsRoute: typeof SoldCarsRoute
   TermsRoute: typeof TermsRoute
   VehiclesSlugRoute: typeof VehiclesSlugRoute
   VehiclesIndexRoute: typeof VehiclesIndexRoute
@@ -224,6 +237,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RequestACarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sold-cars': {
+      id: '/sold-cars'
+      path: '/sold-cars'
+      fullPath: '/sold-cars'
+      preLoaderRoute: typeof SoldCarsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -263,6 +283,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   PrivacyRoute: PrivacyRoute,
   RequestACarRoute: RequestACarRoute,
+  SoldCarsRoute: SoldCarsRoute,
   TermsRoute: TermsRoute,
   VehiclesSlugRoute: VehiclesSlugRoute,
   VehiclesIndexRoute: VehiclesIndexRoute,
