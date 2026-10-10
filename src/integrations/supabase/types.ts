@@ -14,16 +14,240 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_activity: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          details: Json
+          entity: string
+          entity_id: string | null
+          id: number
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity: string
+          entity_id?: string | null
+          id?: never
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity?: string
+          entity_id?: string | null
+          id?: never
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vehicle_images: {
+        Row: {
+          created_at: string
+          height: number | null
+          id: string
+          is_primary: boolean
+          original_name: string | null
+          position: number
+          size_bytes: number | null
+          storage_path: string
+          thumb_path: string | null
+          vehicle_id: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_primary?: boolean
+          original_name?: string | null
+          position?: number
+          size_bytes?: number | null
+          storage_path: string
+          thumb_path?: string | null
+          vehicle_id: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          height?: number | null
+          id?: string
+          is_primary?: boolean
+          original_name?: string | null
+          position?: number
+          size_bytes?: number | null
+          storage_path?: string
+          thumb_path?: string | null
+          vehicle_id?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_images_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          auction_grade: string | null
+          body_type: string | null
+          chassis_number: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          description: string | null
+          drivetrain: string | null
+          engine_cc: number | null
+          exterior_color: string | null
+          featured: boolean
+          fuel: string | null
+          id: string
+          interior_color: string | null
+          location: string | null
+          make: string
+          mileage: number
+          mileage_unit: string
+          model: string
+          price: number
+          primary_image_path: string | null
+          primary_thumb_path: string | null
+          publish_state: Database["public"]["Enums"]["publish_state"]
+          search_text: string | null
+          shipping_info: string | null
+          slug: string | null
+          status: Database["public"]["Enums"]["vehicle_status"]
+          stock_id: string
+          transmission: string | null
+          updated_at: string
+          variant: string | null
+          year: number
+        }
+        Insert: {
+          auction_grade?: string | null
+          body_type?: string | null
+          chassis_number?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          drivetrain?: string | null
+          engine_cc?: number | null
+          exterior_color?: string | null
+          featured?: boolean
+          fuel?: string | null
+          id?: string
+          interior_color?: string | null
+          location?: string | null
+          make: string
+          mileage: number
+          mileage_unit?: string
+          model: string
+          price: number
+          primary_image_path?: string | null
+          primary_thumb_path?: string | null
+          publish_state?: Database["public"]["Enums"]["publish_state"]
+          search_text?: string | null
+          shipping_info?: string | null
+          slug?: string | null
+          status?: Database["public"]["Enums"]["vehicle_status"]
+          stock_id: string
+          transmission?: string | null
+          updated_at?: string
+          variant?: string | null
+          year: number
+        }
+        Update: {
+          auction_grade?: string | null
+          body_type?: string | null
+          chassis_number?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          description?: string | null
+          drivetrain?: string | null
+          engine_cc?: number | null
+          exterior_color?: string | null
+          featured?: boolean
+          fuel?: string | null
+          id?: string
+          interior_color?: string | null
+          location?: string | null
+          make?: string
+          mileage?: number
+          mileage_unit?: string
+          model?: string
+          price?: number
+          primary_image_path?: string | null
+          primary_thumb_path?: string | null
+          publish_state?: Database["public"]["Enums"]["publish_state"]
+          search_text?: string | null
+          shipping_info?: string | null
+          slug?: string | null
+          status?: Database["public"]["Enums"]["vehicle_status"]
+          stock_id?: string
+          transmission?: string | null
+          updated_at?: string
+          variant?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      vehicle_facets: {
+        Args: never
+        Returns: {
+          make: string
+          model: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "inventory_manager"
+      publish_state: "draft" | "published" | "archived"
+      vehicle_status: "available" | "reserved" | "sold"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +374,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "inventory_manager"],
+      publish_state: ["draft", "published", "archived"],
+      vehicle_status: ["available", "reserved", "sold"],
+    },
   },
 } as const
