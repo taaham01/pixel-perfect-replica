@@ -17,6 +17,8 @@ import { Footer } from "@/components/site/Footer";
 import { WhatsAppButton } from "@/components/site/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
 import { site } from "@/config/site";
+import { supabase } from "@/integrations/supabase/client";
+import { useRouterState } from "@tanstack/react-router";
 
 function NotFoundComponent() {
   return (
@@ -118,15 +120,30 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  const isAdmin = useRouterState({ select: (s) => s.location.pathname.startsWith("/admin") });
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      router.invalidate();
+      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+    });
+    return () => data.subscription.unsubscribe();
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Navbar />
-      <main>
-        <Outlet />
-      </main>
-      <Footer />
-      <WhatsAppButton />
+      {isAdmin ? <Outlet /> : (
+        <>
+          <Navbar />
+          <main>
+            <Outlet />
+          </main>
+          <Footer />
+          <WhatsAppButton />
+        </>
+      )}
       <Toaster position="top-center" />
     </QueryClientProvider>
   );
