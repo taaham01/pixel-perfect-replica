@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import { site } from "@/config/site";
-import { getFeaturedVehicles } from "@/data/vehicles";
+import { getFacets, getFeaturedVehicles } from "@/lib/vehicles.functions";
 import { btn, Reveal, SectionHeader } from "@/components/site/primitives";
 import { SearchBar, VehicleGrid } from "@/components/site/vehicles";
 import { CTASection, DealerSection, ProcessSteps, TrustSection, WorldMap } from "@/components/site/sections";
@@ -21,11 +21,15 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: async () => {
+    const [featured, facets] = await Promise.all([getFeaturedVehicles(), getFacets()]);
+    return { featured, facets };
+  },
   component: Home,
 });
 
 function Home() {
-  const featured = getFeaturedVehicles();
+  const { featured, facets } = Route.useLoaderData();
   return (
     <>
       <section className="relative flex min-h-[92vh] items-end overflow-hidden bg-ink pb-40 pt-36 text-ink-foreground md:items-center md:pb-48">
@@ -51,7 +55,7 @@ function Home() {
       </section>
 
       <section className="container-x relative z-10 -mt-28">
-        <SearchBar />
+        <SearchBar facets={facets} />
       </section>
 
       <section className="py-24 md:py-32">
@@ -60,7 +64,13 @@ function Home() {
             <SectionHeader eyebrow="Inventory" title="Featured Vehicles" subtitle="Explore vehicles currently available for international export." />
             <Link to="/vehicles" className={btn({ variant: "outline" })}>View All Vehicles <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          <Reveal><VehicleGrid vehicles={featured} /></Reveal>
+          <Reveal><VehicleGrid vehicles={featured} empty={
+            <div className="rounded-sm border border-dashed border-border px-6 py-16 text-center">
+              <p className="text-lg font-semibold">New stock is being added.</p>
+              <p className="mt-2 text-muted-foreground">Tell us the vehicle you want and our team in Japan will source it.</p>
+              <Link to="/request-a-car" className={btn({ variant: "primary" }) + " mt-6"}>Request a Car</Link>
+            </div>
+          } /></Reveal>
         </div>
       </section>
 

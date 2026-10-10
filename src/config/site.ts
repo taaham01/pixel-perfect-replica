@@ -45,6 +45,7 @@ export function formatKm(km: number) {
 
 export const navLinks = [
   { to: "/vehicles", label: "Vehicles" },
+  { to: "/sold-cars", label: "Sold Cars" },
   { to: "/request-a-car", label: "Request a Car" },
   { to: "/how-it-works", label: "How It Works" },
   { to: "/dealers", label: "For Dealers" },
