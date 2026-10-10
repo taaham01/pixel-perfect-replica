@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import hero from "@/assets/hero.jpg";
 import { site } from "@/config/site";
-import { getFeaturedVehicles } from "@/data/vehicles";
+import { getFacets, getFeaturedVehicles } from "@/lib/vehicles.functions";
 import { btn, Reveal, SectionHeader } from "@/components/site/primitives";
 import { SearchBar, VehicleGrid } from "@/components/site/vehicles";
 import { CTASection, DealerSection, ProcessSteps, TrustSection, WorldMap } from "@/components/site/sections";
@@ -21,11 +21,15 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
+  loader: async () => {
+    const [featured, facets] = await Promise.all([getFeaturedVehicles(), getFacets()]);
+    return { featured, facets };
+  },
   component: Home,
 });
 
 function Home() {
-  const featured = getFeaturedVehicles();
+  const { featured, facets } = Route.useLoaderData();
   return (
     <>
       <section className="relative flex min-h-[92vh] items-end overflow-hidden bg-ink pb-40 pt-36 text-ink-foreground md:items-center md:pb-48">
@@ -51,7 +55,7 @@ function Home() {
       </section>
 
       <section className="container-x relative z-10 -mt-28">
-        <SearchBar />
+        <SearchBar facets={facets} />
       </section>
 
       <section className="py-24 md:py-32">

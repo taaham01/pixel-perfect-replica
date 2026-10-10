@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Check, Loader2 } from "lucide-react";
 import { countries } from "@/config/site";
-import { bodyTypes, fuels, makes, transmissions } from "@/data/vehicles";
+import { bodyTypes, commonMakes, fuels, transmissions } from "@/data/vehicles";
 import { submitForm, type FormKind } from "@/lib/inquiries";
 import { cn } from "@/lib/utils";
 import { btn } from "./primitives";
@@ -80,7 +80,7 @@ export function VehicleRequestForm() {
       { name: "country", label: "Country", type: "select", options: countries, required: true },
       { name: "whatsapp", label: "WhatsApp", type: "tel", required: true },
       { name: "email", label: "Email", type: "email", required: true },
-      { name: "make", label: "Preferred Make", type: "select", options: [...makes, "Nissan", "Mitsubishi", "Subaru", "Suzuki", "Lexus", "Isuzu", "Other"] },
+      { name: "make", label: "Preferred Make", type: "select", options: [...commonMakes, "Other"] },
       { name: "model", label: "Preferred Model", placeholder: "e.g. Prado, X-Trail" },
       { name: "minYear", label: "Minimum Year", type: "select", options: yearOpts },
       { name: "budget", label: "Maximum Budget (USD)", type: "number", placeholder: "25000" },
