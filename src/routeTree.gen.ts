@@ -26,6 +26,9 @@ import { Route as AdminSetupRouteImport } from './routes/admin.setup'
 import { Route as VehiclesIndexRouteImport } from './routes/vehicles.index'
 import { Route as VehiclesSlugRouteImport } from './routes/vehicles.$slug'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminActivityRouteImport } from './routes/_authenticated/admin/activity'
+import { Route as AuthenticatedAdminAdminsRouteImport } from './routes/_authenticated/admin/admins'
+import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin/import'
 import { Route as AuthenticatedAdminSoldRouteImport } from './routes/_authenticated/admin/sold'
 import { Route as AuthenticatedAdminVehiclesIndexRouteImport } from './routes/_authenticated/admin/vehicles.index'
 import { Route as AuthenticatedAdminVehiclesNewRouteImport } from './routes/_authenticated/admin/vehicles.new'
@@ -116,6 +119,24 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminActivityRoute =
+  AuthenticatedAdminActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminAdminsRoute =
+  AuthenticatedAdminAdminsRouteImport.update({
+    id: '/admins',
+    path: '/admins',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminImportRoute =
+  AuthenticatedAdminImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAdminSoldRoute = AuthenticatedAdminSoldRouteImport.update({
   id: '/sold',
   path: '/sold',
@@ -161,6 +182,9 @@ export interface FileRoutesByFullPath {
   '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles/': typeof VehiclesIndexRoute
+  '/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/admin/admins': typeof AuthenticatedAdminAdminsRoute
+  '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/sold': typeof AuthenticatedAdminSoldRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/vehicles/new': typeof AuthenticatedAdminVehiclesNewRoute
@@ -183,6 +207,9 @@ export interface FileRoutesByTo {
   '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles': typeof VehiclesIndexRoute
+  '/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/admin/admins': typeof AuthenticatedAdminAdminsRoute
+  '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/sold': typeof AuthenticatedAdminSoldRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/vehicles/new': typeof AuthenticatedAdminVehiclesNewRoute
@@ -208,6 +235,9 @@ export interface FileRoutesById {
   '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
   '/vehicles/': typeof VehiclesIndexRoute
+  '/_authenticated/admin/activity': typeof AuthenticatedAdminActivityRoute
+  '/_authenticated/admin/admins': typeof AuthenticatedAdminAdminsRoute
+  '/_authenticated/admin/import': typeof AuthenticatedAdminImportRoute
   '/_authenticated/admin/sold': typeof AuthenticatedAdminSoldRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/vehicles/new': typeof AuthenticatedAdminVehiclesNewRoute
@@ -233,6 +263,9 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/vehicles/$slug'
     | '/vehicles/'
+    | '/admin/activity'
+    | '/admin/admins'
+    | '/admin/import'
     | '/admin/sold'
     | '/admin/'
     | '/admin/vehicles/new'
@@ -255,6 +288,9 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/vehicles/$slug'
     | '/vehicles'
+    | '/admin/activity'
+    | '/admin/admins'
+    | '/admin/import'
     | '/admin/sold'
     | '/admin'
     | '/admin/vehicles/new'
@@ -279,6 +315,9 @@ export interface FileRouteTypes {
     | '/admin/setup'
     | '/vehicles/$slug'
     | '/vehicles/'
+    | '/_authenticated/admin/activity'
+    | '/_authenticated/admin/admins'
+    | '/_authenticated/admin/import'
     | '/_authenticated/admin/sold'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/vehicles/new'
@@ -427,6 +466,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/activity': {
+      id: '/_authenticated/admin/activity'
+      path: '/activity'
+      fullPath: '/admin/activity'
+      preLoaderRoute: typeof AuthenticatedAdminActivityRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/admins': {
+      id: '/_authenticated/admin/admins'
+      path: '/admins'
+      fullPath: '/admin/admins'
+      preLoaderRoute: typeof AuthenticatedAdminAdminsRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/import': {
+      id: '/_authenticated/admin/import'
+      path: '/import'
+      fullPath: '/admin/import'
+      preLoaderRoute: typeof AuthenticatedAdminImportRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/sold': {
       id: '/_authenticated/admin/sold'
       path: '/sold'
@@ -466,6 +526,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminActivityRoute: typeof AuthenticatedAdminActivityRoute
+  AuthenticatedAdminAdminsRoute: typeof AuthenticatedAdminAdminsRoute
+  AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRoute
   AuthenticatedAdminSoldRoute: typeof AuthenticatedAdminSoldRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminVehiclesNewRoute: typeof AuthenticatedAdminVehiclesNewRoute
@@ -475,6 +538,9 @@ interface AuthenticatedAdminRouteRouteChildren {
 
 const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
   {
+    AuthenticatedAdminActivityRoute: AuthenticatedAdminActivityRoute,
+    AuthenticatedAdminAdminsRoute: AuthenticatedAdminAdminsRoute,
+    AuthenticatedAdminImportRoute: AuthenticatedAdminImportRoute,
     AuthenticatedAdminSoldRoute: AuthenticatedAdminSoldRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
     AuthenticatedAdminVehiclesNewRoute: AuthenticatedAdminVehiclesNewRoute,
