@@ -44,7 +44,10 @@ function Account() {
       if (error) throw error;
     },
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ["customer-details", user.id] });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["customer-details", user.id] }),
+        qc.invalidateQueries({ queryKey: ["customer-summary", user.id] }),
+      ]);
       setEditing(false);
       toast.success("Your details have been saved.");
     },
