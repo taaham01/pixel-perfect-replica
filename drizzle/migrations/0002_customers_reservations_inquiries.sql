@@ -12,20 +12,28 @@ BEGIN
 END $$;
 
 -- ---------------------------------------------------------------------------
--- Customer profiles (contact details captured at signup)
+-- Customer profiles. Phone numbers live in a separate table (customer_contacts) so that
+-- staff can see who a customer is without being able to see how to reach them.
 -- ---------------------------------------------------------------------------
+CREATE SEQUENCE public.customer_number_seq;
+
 CREATE TABLE public.customer_profiles (
   user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  -- Human-friendly, auto-generated ID that staff and customers can quote to each other.
+  customer_number text NOT NULL UNIQUE
+    DEFAULT ('AHM-' || lpad(nextval('public.customer_number_seq')::text, 6, '0')),
   full_name text NOT NULL CHECK (length(btrim(full_name)) BETWEEN 1 AND 120),
-  phone text NOT NULL CHECK (length(btrim(phone)) BETWEEN 6 AND 30),
   country text NOT NULL CHECK (length(btrim(country)) BETWEEN 1 AND 80),
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER SEQUENCE public.customer_number_seq OWNED BY public.customer_profiles.customer_number;
 CREATE TRIGGER customer_profiles_touch BEFORE UPDATE ON public.customer_profiles
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
-GRANT SELECT, UPDATE ON public.customer_profiles TO authenticated;
+-- Customers may edit their name and country only; the ID and key are fixed.
+GRANT SELECT ON public.customer_profiles TO authenticated;
+GRANT UPDATE (full_name, country) ON public.customer_profiles TO authenticated;
 GRANT ALL ON public.customer_profiles TO service_role;
 ALTER TABLE public.customer_profiles ENABLE ROW LEVEL SECURITY;
 
@@ -35,6 +43,24 @@ CREATE POLICY "Customers read own profile" ON public.customer_profiles
 CREATE POLICY "Admins read all profiles" ON public.customer_profiles
   FOR SELECT TO authenticated USING (public.is_admin(auth.uid()));
 CREATE POLICY "Customers update own profile" ON public.customer_profiles
+  FOR UPDATE TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+
+-- Phone numbers: visible to the customer themselves and to Super Admins only.
+CREATE TABLE public.customer_contacts (
+  user_id uuid PRIMARY KEY REFERENCES public.customer_profiles(user_id) ON DELETE CASCADE,
+  phone text NOT NULL CHECK (length(btrim(phone)) BETWEEN 6 AND 30),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TRIGGER customer_contacts_touch BEFORE UPDATE ON public.customer_contacts
+  FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+GRANT SELECT, UPDATE ON public.customer_contacts TO authenticated;
+GRANT ALL ON public.customer_contacts TO service_role;
+ALTER TABLE public.customer_contacts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Customers read own phone" ON public.customer_contacts
+  FOR SELECT TO authenticated USING (user_id = auth.uid());
+CREATE POLICY "Super admins read phones" ON public.customer_contacts
+  FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'));
+CREATE POLICY "Customers update own phone" ON public.customer_contacts
   FOR UPDATE TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 
 -- Create the profile when someone signs up with full_name / phone / country in the signup metadata.
@@ -48,8 +74,11 @@ DECLARE
   c text := btrim(coalesce(NEW.raw_user_meta_data ->> 'country', ''));
 BEGIN
   IF length(n) BETWEEN 1 AND 120 AND length(p) BETWEEN 6 AND 30 AND length(c) BETWEEN 1 AND 80 THEN
-    INSERT INTO public.customer_profiles (user_id, full_name, phone, country)
-    VALUES (NEW.id, n, p, c)
+    INSERT INTO public.customer_profiles (user_id, full_name, country)
+    VALUES (NEW.id, n, c)
+    ON CONFLICT (user_id) DO NOTHING;
+    INSERT INTO public.customer_contacts (user_id, phone)
+    VALUES (NEW.id, p)
     ON CONFLICT (user_id) DO NOTHING;
   END IF;
   RETURN NEW;
@@ -195,7 +224,6 @@ CREATE TABLE public.inquiries (
   kind text NOT NULL CHECK (kind IN ('vehicle-inquiry', 'vehicle-request', 'dealer', 'contact')),
   name text NOT NULL CHECK (length(btrim(name)) BETWEEN 1 AND 200),
   email text CHECK (email IS NULL OR length(email) <= 254),
-  whatsapp text CHECK (whatsapp IS NULL OR length(whatsapp) <= 50),
   country text CHECK (country IS NULL OR length(country) <= 80),
   message text CHECK (message IS NULL OR length(message) <= 2000),
   payload jsonb NOT NULL DEFAULT '{}'::jsonb,
@@ -216,3 +244,15 @@ CREATE POLICY "Admins read inquiries" ON public.inquiries
   FOR SELECT TO authenticated USING (public.is_admin(auth.uid()));
 CREATE POLICY "Admins update inquiries" ON public.inquiries
   FOR UPDATE TO authenticated USING (public.is_admin(auth.uid())) WITH CHECK (public.is_admin(auth.uid()));
+
+-- WhatsApp / phone numbers submitted through forms: Super Admins only, like customer phones.
+-- (The server must also keep the number out of inquiries.payload.)
+CREATE TABLE public.inquiry_contacts (
+  inquiry_id uuid PRIMARY KEY REFERENCES public.inquiries(id) ON DELETE CASCADE,
+  whatsapp text NOT NULL CHECK (length(whatsapp) <= 50)
+);
+GRANT SELECT ON public.inquiry_contacts TO authenticated;
+GRANT ALL ON public.inquiry_contacts TO service_role;
+ALTER TABLE public.inquiry_contacts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Super admins read inquiry numbers" ON public.inquiry_contacts
+  FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'super_admin'));
