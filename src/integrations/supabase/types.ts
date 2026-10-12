@@ -47,6 +47,128 @@ export type Database = {
         }
         Relationships: []
       }
+      bookings: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          staff_note: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+          user_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          staff_note?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          user_id: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          staff_note?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          user_id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phone_otps: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          expires_at: string
+          phone: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          phone: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          phone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          country: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          phone_verified: boolean
+          updated_at: string
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          phone_verified?: boolean
+          updated_at?: string
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          phone_verified?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      staff_permissions: {
+        Row: {
+          can_manage_bookings: boolean
+          can_publish: boolean
+          can_view_customers: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_manage_bookings?: boolean
+          can_publish?: boolean
+          can_view_customers?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_manage_bookings?: boolean
+          can_publish?: boolean
+          can_view_customers?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -228,6 +350,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_perm: { Args: { _perm: string; _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -246,6 +369,7 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "inventory_manager"
+      booking_status: "pending" | "confirmed" | "cancelled" | "completed"
       publish_state: "draft" | "published" | "archived"
       vehicle_status: "available" | "reserved" | "sold"
     }
@@ -376,6 +500,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "inventory_manager"],
+      booking_status: ["pending", "confirmed", "cancelled", "completed"],
       publish_state: ["draft", "published", "archived"],
       vehicle_status: ["available", "reserved", "sold"],
     },
