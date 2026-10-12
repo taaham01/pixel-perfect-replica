@@ -28,7 +28,7 @@ export const sendPhoneOtp = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: prev } = await supabaseAdmin.from("phone_otps").select("created_at").eq("user_id", context.userId).maybeSingle();
     if (prev && Date.now() - new Date(prev.created_at).getTime() < 60_000) throw new Error("Please wait a minute before requesting another code.");
-    const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, "0");
+    const code = String((crypto.getRandomValues(new Uint32Array(1))[0] ?? 0) % 1_000_000).padStart(6, "0");
     await sendSms(data.phone, `Your verification code is ${code}`);
     await supabaseAdmin.from("phone_otps").upsert({ user_id: context.userId, phone: data.phone, code_hash: await sha256(context.userId + code), attempts: 0, expires_at: new Date(Date.now() + 10 * 60_000).toISOString(), created_at: new Date().toISOString() });
     return { ok: true };
