@@ -87,6 +87,29 @@ REVOKE EXECUTE ON FUNCTION public.handle_new_customer() FROM PUBLIC, anon, authe
 CREATE TRIGGER on_auth_user_created_customer AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_customer();
 
+-- For signed-in users who have no profile yet (e.g. accounts created without the signup form).
+CREATE OR REPLACE FUNCTION public.complete_customer_profile(_full_name text, _phone text, _country text)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  uid uuid := auth.uid();
+  n text := btrim(coalesce(_full_name, ''));
+  p text := btrim(coalesce(_phone, ''));
+  c text := btrim(coalesce(_country, ''));
+BEGIN
+  IF uid IS NULL THEN
+    RAISE EXCEPTION 'Please sign in.';
+  END IF;
+  IF length(n) NOT BETWEEN 1 AND 120 OR length(c) NOT BETWEEN 1 AND 80 OR length(p) NOT BETWEEN 6 AND 30 THEN
+    RAISE EXCEPTION 'Please enter your name, country and a valid phone number.';
+  END IF;
+  INSERT INTO public.customer_profiles (user_id, full_name, country) VALUES (uid, n, c)
+  ON CONFLICT (user_id) DO UPDATE SET full_name = EXCLUDED.full_name, country = EXCLUDED.country;
+  INSERT INTO public.customer_contacts (user_id, phone) VALUES (uid, p)
+  ON CONFLICT (user_id) DO UPDATE SET phone = EXCLUDED.phone;
+END $$;
+REVOKE EXECUTE ON FUNCTION public.complete_customer_profile(text, text, text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.complete_customer_profile(text, text, text) TO authenticated;
+
 -- ---------------------------------------------------------------------------
 -- Reservations
 -- ---------------------------------------------------------------------------

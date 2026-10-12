@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated")({
     const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
     const roles = (data ?? []).map((r) => r.role as AdminRole);
     if (!roles.length) {
-      await supabase.auth.signOut();
+      // Signed in but not staff (e.g. a customer): deny without ending their session.
       throw redirect({ to: "/admin/login", search: { denied: true } });
     }
     return { admin: { id: user.id, email: user.email ?? "", roles, isSuper: roles.includes("super_admin") } };

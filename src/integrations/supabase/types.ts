@@ -47,6 +47,38 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_contacts: {
+        Row: { phone: string; updated_at: string; user_id: string }
+        Insert: { phone: string; updated_at?: string; user_id: string }
+        Update: { phone?: string; updated_at?: string; user_id?: string }
+        Relationships: []
+      }
+      customer_profiles: {
+        Row: { country: string; created_at: string; customer_number: string; full_name: string; updated_at: string; user_id: string }
+        Insert: { country: string; created_at?: string; customer_number?: string; full_name: string; updated_at?: string; user_id: string }
+        Update: { country?: string; created_at?: string; customer_number?: string; full_name?: string; updated_at?: string; user_id?: string }
+        Relationships: []
+      }
+      inquiries: {
+        Row: { country: string | null; created_at: string; email: string | null; id: string; kind: string; message: string | null; name: string; payload: Json; status: Database["public"]["Enums"]["inquiry_status"]; updated_at: string; user_id: string | null }
+        Insert: { country?: string | null; created_at?: string; email?: string | null; id?: string; kind: string; message?: string | null; name: string; payload?: Json; status?: Database["public"]["Enums"]["inquiry_status"]; updated_at?: string; user_id?: string | null }
+        Update: { country?: string | null; created_at?: string; email?: string | null; id?: string; kind?: string; message?: string | null; name?: string; payload?: Json; status?: Database["public"]["Enums"]["inquiry_status"]; updated_at?: string; user_id?: string | null }
+        Relationships: []
+      }
+      inquiry_contacts: {
+        Row: { inquiry_id: string; whatsapp: string }
+        Insert: { inquiry_id: string; whatsapp: string }
+        Update: { inquiry_id?: string; whatsapp?: string }
+        Relationships: []
+      }
+      reservations: {
+        Row: { created_at: string; customer_id: string; id: string; note: string | null; status: Database["public"]["Enums"]["reservation_status"]; updated_at: string; vehicle_id: string }
+        Insert: { created_at?: string; customer_id: string; id?: string; note?: string | null; status?: Database["public"]["Enums"]["reservation_status"]; updated_at?: string; vehicle_id: string }
+        Update: { created_at?: string; customer_id?: string; id?: string; note?: string | null; status?: Database["public"]["Enums"]["reservation_status"]; updated_at?: string; vehicle_id?: string }
+        Relationships: [
+          { foreignKeyName: "reservations_vehicle_id_fkey"; columns: ["vehicle_id"]; isOneToOne: false; referencedRelation: "vehicles"; referencedColumns: ["id"] },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -228,6 +260,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_reservation: { Args: { _reservation_id: string }; Returns: undefined }
+      complete_customer_profile: { Args: { _country: string; _full_name: string; _phone: string }; Returns: undefined }
+      reserve_vehicle: { Args: { _note?: string; _vehicle_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -246,7 +281,9 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "inventory_manager"
+      inquiry_status: "new" | "contacted" | "closed"
       publish_state: "draft" | "published" | "archived"
+      reservation_status: "pending" | "confirmed" | "cancelled" | "completed"
       vehicle_status: "available" | "reserved" | "sold"
     }
     CompositeTypes: {
@@ -376,7 +413,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "inventory_manager"],
+      inquiry_status: ["new", "contacted", "closed"],
       publish_state: ["draft", "published", "archived"],
+      reservation_status: ["pending", "confirmed", "cancelled", "completed"],
       vehicle_status: ["available", "reserved", "sold"],
     },
   },

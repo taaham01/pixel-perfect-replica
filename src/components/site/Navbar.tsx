@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { MessageCircle } from "lucide-react";
 import { navLinks, whatsappLink } from "@/config/site";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import { btn } from "./primitives";
@@ -9,7 +10,14 @@ import { btn } from "./primitives";
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
+    const { data } = supabase.auth.onAuthStateChange((_e, session) => setSignedIn(!!session));
+    return () => data.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 24);
@@ -33,6 +41,7 @@ export function Navbar() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 lg:flex">
+          <Link to={signedIn ? "/account" : "/login"} className={btn({ variant: "ghostLight", size: "sm" })}>{signedIn ? "My Account" : "Sign In"}</Link>
           <a href={whatsappLink()} target="_blank" rel="noreferrer" className={btn({ variant: "ghostLight", size: "sm" })}>
             <MessageCircle className="h-4 w-4" /> WhatsApp Us
           </a>
@@ -50,6 +59,7 @@ export function Navbar() {
             {navLinks.map((l) => (
               <Link key={l.to} to={l.to} className="border-b border-ink-line py-4 text-lg font-semibold text-ink-foreground">{l.label}</Link>
             ))}
+            <Link to={signedIn ? "/account" : "/login"} className="border-b border-ink-line py-4 text-lg font-semibold text-ink-foreground">{signedIn ? "My Account" : "Sign In"}</Link>
             <div className="mt-6 grid grid-cols-2 gap-3">
               <a href={whatsappLink()} target="_blank" rel="noreferrer" className={btn({ variant: "whatsapp" })}><MessageCircle className="h-4 w-4" /> WhatsApp</a>
               <Link to="/vehicles" className={btn({ variant: "primary" })}>Browse</Link>
