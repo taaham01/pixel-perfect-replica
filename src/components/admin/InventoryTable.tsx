@@ -84,8 +84,8 @@ export function InventoryTable({ filters, onChange, lockStatus }: { filters: Adm
           <button disabled={busy} onClick={() => bulk({ status: "available" }, "Mark available")} className={btn({ variant: "outline", size: "sm" })}>Available</button>
           <button disabled={busy} onClick={() => bulk({ status: "reserved" }, "Mark reserved")} className={btn({ variant: "outline", size: "sm" })}>Reserved</button>
           <button disabled={busy} onClick={() => bulk({ status: "sold" }, "Mark sold")} className={btn({ variant: "outline", size: "sm" })}>Sold</button>
-          <button disabled={busy} onClick={() => bulk({ publish_state: "published" }, "Publish")} className={btn({ variant: "outline", size: "sm" })}>Publish</button>
-          <button disabled={busy} onClick={() => bulk({ publish_state: "draft" }, "Unpublish")} className={btn({ variant: "outline", size: "sm" })}>Unpublish</button>
+          {admin.perms.publish && <><button disabled={busy} onClick={() => bulk({ publish_state: "published" }, "Publish")} className={btn({ variant: "outline", size: "sm" })}>Publish</button>
+          <button disabled={busy} onClick={() => bulk({ publish_state: "draft" }, "Unpublish")} className={btn({ variant: "outline", size: "sm" })}>Unpublish</button></>}
           {admin.isSuper && <button disabled={busy} onClick={() => bulk({ publish_state: "archived" }, "Archive")} className={btn({ variant: "ink", size: "sm" })}>Archive</button>}
           <button onClick={() => setSel(new Set())} className="ml-auto text-sm text-muted-foreground hover:underline">Clear</button>
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}

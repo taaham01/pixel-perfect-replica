@@ -15,6 +15,13 @@
       "when": 1791653791095,
       "tag": "0001_ban_aware_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791766489563,
+      "tag": "0002_customers_bookings_permissions",
+      "breakpoints": true
     }
   ]
 }
