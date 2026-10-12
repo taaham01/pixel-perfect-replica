@@ -16,10 +16,12 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DealersRouteImport } from './routes/dealers'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RequestACarRouteImport } from './routes/request-a-car'
 import { Route as SoldCarsRouteImport } from './routes/sold-cars'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminSetupRouteImport } from './routes/admin.setup'
@@ -72,6 +74,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
   path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -91,6 +98,11 @@ const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   id: '/admin',
@@ -194,11 +206,13 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/dealers': typeof DealersRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/request-a-car': typeof RequestACarRoute
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/account': typeof AuthenticatedAccountRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
@@ -223,10 +237,12 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/dealers': typeof DealersRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/request-a-car': typeof RequestACarRoute
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
@@ -253,11 +269,13 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/dealers': typeof DealersRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/request-a-car': typeof RequestACarRoute
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
@@ -284,11 +302,13 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dealers'
     | '/how-it-works'
+    | '/login'
     | '/privacy'
     | '/request-a-car'
     | '/sold-cars'
     | '/terms'
     | '/admin'
+    | '/account'
     | '/admin/login'
     | '/admin/setup'
     | '/vehicles/$slug'
@@ -313,10 +333,12 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dealers'
     | '/how-it-works'
+    | '/login'
     | '/privacy'
     | '/request-a-car'
     | '/sold-cars'
     | '/terms'
+    | '/account'
     | '/admin/login'
     | '/admin/setup'
     | '/vehicles/$slug'
@@ -342,11 +364,13 @@ export interface FileRouteTypes {
     | '/contact'
     | '/dealers'
     | '/how-it-works'
+    | '/login'
     | '/privacy'
     | '/request-a-car'
     | '/sold-cars'
     | '/terms'
     | '/_authenticated/admin'
+    | '/_authenticated/account'
     | '/admin/login'
     | '/admin/setup'
     | '/vehicles/$slug'
@@ -373,6 +397,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DealersRoute: typeof DealersRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   RequestACarRoute: typeof RequestACarRoute
   SoldCarsRoute: typeof SoldCarsRoute
@@ -435,6 +460,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/privacy': {
       id: '/privacy'
       path: '/privacy'
@@ -462,6 +494,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
@@ -622,10 +661,12 @@ const AuthenticatedAdminRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
+  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -639,6 +680,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DealersRoute: DealersRoute,
   HowItWorksRoute: HowItWorksRoute,
+  LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   RequestACarRoute: RequestACarRoute,
   SoldCarsRoute: SoldCarsRoute,
