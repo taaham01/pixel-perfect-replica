@@ -115,13 +115,13 @@ export function VehicleEditor({ vehicle }: { vehicle?: VehicleRow }) {
           {!vehicle ? (
             <>
               <B id="draft" onClick={() => save("draft", { publish_state: "draft" })}>Save as draft</B>
-              <B id="publish" variant="primary" onClick={() => save("publish", { publish_state: "published" })}>Publish</B>
+              {admin.perms.publish && <B id="publish" variant="primary" onClick={() => save("publish", { publish_state: "published" })}>Publish</B>}
             </>
           ) : (
             <>
               {form.status !== "sold" && <B id="sold" onClick={() => save("sold", { status: "sold" })}>Mark as sold</B>}
-              {current === "published" && <B id="unpub" onClick={() => save("unpub", { publish_state: "draft" })}>Unpublish</B>}
-              {current === "draft" && <B id="publish" variant="ink" onClick={() => save("publish", { publish_state: "published" })}>Publish</B>}
+              {admin.perms.publish && current === "published" && <B id="unpub" onClick={() => save("unpub", { publish_state: "draft" })}>Unpublish</B>}
+              {admin.perms.publish && current === "draft" && <B id="publish" variant="ink" onClick={() => save("publish", { publish_state: "published" })}>Publish</B>}
               <B id="save" variant="primary" onClick={() => save("save")}>Save changes</B>
             </>
           )}
