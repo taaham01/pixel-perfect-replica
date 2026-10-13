@@ -104,3 +104,69 @@ export const setAdminActive = createServerFn({ method: "POST" })
     await log(context.userId, actorEmail(context.claims), data.active ? "admin.reactivated" : "admin.deactivated", data.userId, {});
     return { ok: true };
   });
+
+const permSchema = z.object({ can_publish: z.boolean(), can_manage_bookings: z.boolean(), can_view_customers: z.boolean() });
+
+export const listStaffPermissions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertSuper(context);
+    const { data } = await context.supabase.from("staff_permissions").select("*");
+    return data ?? [];
+  });
+
+export const setStaffPermissions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid(), perms: permSchema }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertSuper(context);
+    const admin = await getAdmin();
+    const { error } = await admin.from("staff_permissions").upsert({ user_id: data.userId, ...data.perms, updated_at: new Date().toISOString() });
+    if (error) throw new Error("Could not save permissions.");
+    await log(context.userId, actorEmail(context.claims), "admin.permissions_changed", data.userId, data.perms);
+    return { ok: true };
+  });
+
+/** Customers = accounts with a profile and no staff role. Needs Super Admin or "view customers" permission. Phone numbers are returned for Super Admins only. */
+export const listCustomers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: ok } = await context.supabase.rpc("has_perm", { _user_id: context.userId, _perm: "customers" });
+    if (!ok) throw new Error("You do not have permission to view customers.");
+    // Phone numbers are not selectable through the API; only Super Admins can fetch them (via get_customer_phones).
+    const { data: profiles } = await context.supabase.from("profiles")
+      .select("id, full_name, country, phone_verified, customer_number, created_at, updated_at")
+      .order("created_at", { ascending: false });
+    const admin = await getAdmin();
+    const { data: roles } = await admin.from("user_roles").select("user_id");
+    const staff = new Set((roles ?? []).map((r) => r.user_id));
+    const rows = (profiles ?? []).filter((p) => !staff.has(p.id));
+    const { data: isSuper } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "super_admin" });
+    const { data: phones } = isSuper && rows.length
+      ? await context.supabase.rpc("get_customer_phones", { _user_ids: rows.map((r) => r.id) })
+      : { data: [] as { user_id: string; phone: string }[] };
+    const phoneById = new Map((phones ?? []).map((x) => [x.user_id, x.phone]));
+    return Promise.all(rows.map(async (p) => {
+      const { data } = await admin.auth.admin.getUserById(p.id);
+      const u = data.user;
+      return { ...p, phone: phoneById.get(p.id) ?? null, email: u?.email ?? "", active: !(u?.banned_until && new Date(u.banned_until) > new Date()) };
+    }));
+  });
+
+/** Super Admin: suspend/reactivate a customer, or manually mark their phone verified. */
+export const updateCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid(), active: z.boolean().optional(), phoneVerified: z.boolean().optional() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertSuper(context);
+    const admin = await getAdmin();
+    const { count } = await admin.from("user_roles").select("id", { count: "exact", head: true }).eq("user_id", data.userId);
+    if ((count ?? 0) > 0) throw new Error("Use Manage staff for staff accounts.");
+    if (data.active !== undefined) {
+      const { error } = await admin.auth.admin.updateUserById(data.userId, { ban_duration: data.active ? "none" : "876000h" });
+      if (error) throw new Error("Could not update the account.");
+    }
+    if (data.phoneVerified !== undefined) await admin.from("profiles").update({ phone_verified: data.phoneVerified }).eq("id", data.userId);
+    await log(context.userId, actorEmail(context.claims), "customer.updated", data.userId, data);
+    return { ok: true };
+  });

@@ -10,14 +10,12 @@ import { fieldCls } from "@/components/site/vehicles";
 import { detailsSchema } from "@/lib/customer";
 import { cn } from "@/lib/utils";
 
-const t = `My Account — ${site.name}`;
-
-export const Route = createFileRoute("/_customer/account")({
-  head: () => ({ meta: [{ title: t }, { name: "robots", content: "noindex" }] }),
+export const Route = createFileRoute("/_authenticated/account")({
+  head: () => ({ meta: [{ title: `My Account — ${site.name}` }, { name: "robots", content: "noindex" }] }),
   component: Account,
 });
 
-type Details = { customerNumber: string; fullName: string; country: string; phone: string } | null;
+type Details = { customerNumber: string; fullName: string; country: string; phone: string; phoneVerified: boolean } | null;
 
 function Account() {
   const { user } = Route.useRouteContext();
@@ -28,19 +26,42 @@ function Account() {
   const { data: details, isLoading, error } = useQuery({
     queryKey: ["customer-details", user.id],
     queryFn: async (): Promise<Details> => {
-      const [p, c] = await Promise.all([
-        supabase.from("customer_profiles").select("customer_number, full_name, country").eq("user_id", user.id).maybeSingle(),
-        supabase.from("customer_contacts").select("phone").eq("user_id", user.id).maybeSingle(),
-      ]);
-      if (p.error) throw p.error;
-      if (!p.data) return null;
-      return { customerNumber: p.data.customer_number, fullName: p.data.full_name, country: p.data.country, phone: c.data?.phone ?? "" };
+      const { data: p, error } = await supabase
+        .from("profiles")
+        .select("customer_number, full_name, country, phone_verified")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (!p) return null;
+      // Phone numbers can't be selected directly; this function returns only your own.
+      const { data: phones } = await supabase.rpc("get_customer_phones", { _user_ids: [user.id] });
+      return {
+        customerNumber: p.customer_number,
+        fullName: p.full_name ?? "",
+        country: p.country ?? "",
+        phone: phones?.[0]?.phone ?? "",
+        phoneVerified: p.phone_verified,
+      };
+    },
+  });
+
+  const bookings = useQuery({
+    queryKey: ["my-bookings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("bookings").select("*, vehicles(make, model, year)").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
     },
   });
 
   const save = useMutation({
     mutationFn: async (v: { fullName: string; country: string; phone: string }) => {
-      const { error } = await supabase.rpc("complete_customer_profile", { _full_name: v.fullName, _phone: v.phone, _country: v.country });
+      const row = { full_name: v.fullName, country: v.country, phone: v.phone };
+      const { data: existing, error: readErr } = await supabase.from("profiles").select("id").eq("id", user.id).maybeSingle();
+      if (readErr) throw readErr;
+      const { error } = existing
+        ? await supabase.from("profiles").update(row).eq("id", user.id)
+        : await supabase.from("profiles").insert({ id: user.id, ...row });
       if (error) throw error;
     },
     onSuccess: async () => {
@@ -63,16 +84,18 @@ function Account() {
   }
 
   async function signOut() {
+    await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
     router.history.push("/");
   }
 
-  const showForm = !!details && editing ? true : details === null && !isLoading && !error;
+  const showForm = editing || (details === null && !isLoading && !error);
+  const firstName = details?.fullName.split(" ")[0];
 
   return (
     <>
-      <PageHero eyebrow="My account" title={details ? `Welcome, ${details.fullName.split(" ")[0]}.` : "Your account"} subtitle="Your details and reservations in one place." />
+      <PageHero eyebrow="My account" title={firstName ? `Welcome, ${firstName}.` : "Your account"} subtitle="Your details and booking requests in one place." />
       <section className="container-x grid gap-10 py-14 md:py-20 lg:grid-cols-12">
         <div className="lg:col-span-5">
           {isLoading && <p className="text-sm text-muted-foreground">Loading your details…</p>}
@@ -84,9 +107,9 @@ function Account() {
               <CustomerNumber value={details.customerNumber} />
               <p className="mt-1 text-xs text-muted-foreground">Quote this ID when you speak to our team so we know it's you.</p>
               <dl className="mt-6 divide-y divide-border text-sm">
-                <Row label="Name" value={details.fullName} />
-                <Row label="Country" value={details.country} />
-                <Row label="Phone / WhatsApp" value={details.phone || "—"} />
+                <Row label="Name" value={details.fullName || "—"} />
+                <Row label="Country" value={details.country || "—"} />
+                <Row label="Phone / WhatsApp" value={details.phone ? `${details.phone}${details.phoneVerified ? " ✓ verified" : ""}` : "—"} />
                 <Row label="Email" value={user.email} />
               </dl>
               <div className="mt-6 flex flex-wrap gap-3">
@@ -96,10 +119,10 @@ function Account() {
             </div>
           )}
 
-          {showForm && (
+          {showForm && !isLoading && (
             <form onSubmit={onSubmit} className="grid gap-4 rounded-sm border border-border p-6">
               <h2 className="text-lg font-bold">{details ? "Edit your details" : "Complete your details"}</h2>
-              {!details && <p className="text-sm text-muted-foreground">We need your name, country and phone number before you can reserve a vehicle.</p>}
+              {!details && <p className="text-sm text-muted-foreground">We need your name, country and phone number before you can book a vehicle.</p>}
               <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Full name</span><input name="fullName" required defaultValue={details?.fullName} maxLength={120} className={fieldCls} /></label>
               <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Country</span>
                 <select name="country" required defaultValue={details?.country ?? ""} className={fieldCls}>
@@ -107,7 +130,9 @@ function Account() {
                   {countries.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </label>
-              <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Phone / WhatsApp</span><input name="phone" type="tel" required defaultValue={details?.phone} maxLength={30} className={fieldCls} /></label>
+              <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Phone / WhatsApp</span><input name="phone" type="tel" required defaultValue={details?.phone} maxLength={30} className={fieldCls} />
+                {details?.phoneVerified && <span className="mt-1 block text-xs text-muted-foreground">Changing your number means it has to be verified again.</span>}
+              </label>
               <div className="flex gap-3">
                 <button disabled={save.isPending} className={cn(btn({ variant: "primary" }))}>{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save</button>
                 {details && <button type="button" onClick={() => setEditing(false)} className={btn({ variant: "outline" })}>Cancel</button>}
@@ -117,8 +142,17 @@ function Account() {
         </div>
 
         <div className="lg:col-span-7">
-          <h2 className="text-xl font-bold">My reservations</h2>
-          <p className="mt-3 text-sm text-muted-foreground">Vehicles you reserve will appear here.</p>
+          <h2 className="text-xl font-bold">My booking requests</h2>
+          <ul className="mt-4 divide-y divide-border rounded-sm border border-border">
+            {bookings.isLoading && <li className="p-4 text-muted-foreground">Loading…</li>}
+            {bookings.data?.length === 0 && <li className="p-4 text-muted-foreground">No bookings yet.</li>}
+            {bookings.data?.map((b) => (
+              <li key={b.id} className="flex justify-between gap-4 p-4">
+                <span>{b.vehicles ? `${b.vehicles.year} ${b.vehicles.make} ${b.vehicles.model}` : "Vehicle"}</span>
+                <span className="capitalize">{b.status}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     </>

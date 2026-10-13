@@ -30,12 +30,12 @@ export function useCustomer() {
     queryFn: async (): Promise<CustomerSummary> => {
       if (!user) return null;
       const { data, error } = await supabase
-        .from("customer_profiles")
+        .from("profiles")
         .select("customer_number, full_name, country")
-        .eq("user_id", user.id)
+        .eq("id", user.id)
         .maybeSingle();
       if (error || !data) return null;
-      return { customerNumber: data.customer_number, fullName: data.full_name, country: data.country };
+      return { customerNumber: data.customer_number, fullName: data.full_name ?? "", country: data.country ?? "" };
     },
   });
 
@@ -43,6 +43,6 @@ export function useCustomer() {
   // Name shown in the navbar: the saved profile name, else the name typed at signup, else the email's username.
   const rawMeta: unknown = user?.user_metadata?.["full_name"];
   const signupName = typeof rawMeta === "string" ? rawMeta.trim() : "";
-  const displayName = profile?.fullName ?? (signupName || (email ? email.split("@")[0] ?? email : ""));
+  const displayName = profile?.fullName || (signupName || (email ? email.split("@")[0] ?? email : ""));
   return { user, ready, profile: profile ?? null, email, displayName };
 }

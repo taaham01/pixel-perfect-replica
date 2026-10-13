@@ -9,7 +9,7 @@ import { fieldCls } from "@/components/site/vehicles";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/login")({
-  validateSearch: (s: Record<string, unknown>) => ({
+  validateSearch: (s: Record<string, unknown>): { redirect?: string; denied?: boolean } => ({
     redirect: typeof s.redirect === "string" && s.redirect.startsWith("/admin") ? s.redirect : undefined,
     denied: s.denied === true || s.denied === "true" ? true : undefined,
   }),

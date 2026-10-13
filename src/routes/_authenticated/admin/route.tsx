@@ -1,13 +1,20 @@
 import { useState } from "react";
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Activity, Car, CircleDollarSign, FileUp, LayoutDashboard, LogOut, Menu, PlusCircle, Users, X } from "lucide-react";
+import { Activity, Car, CircleDollarSign, FileUp, CalendarCheck, LayoutDashboard, LogOut, UserRound, Menu, PlusCircle, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { Logo } from "@/components/site/Logo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  beforeLoad: async ({ context }) => {
+    if (!context.roles.length) throw redirect({ to: "/account" });
+    const isSuper = context.roles.includes("super_admin");
+    const { data: p } = await supabase.from("staff_permissions").select("*").eq("user_id", context.user.id).maybeSingle();
+    const perms = { publish: isSuper || !!p?.can_publish, bookings: isSuper || !!p?.can_manage_bookings, customers: isSuper || !!p?.can_view_customers };
+    return { admin: { ...context.user, roles: context.roles, isSuper, perms } };
+  },
   head: () => ({ meta: [{ title: "Admin — AL-HASSAN MOTORS JAPAN" }, { name: "robots", content: "noindex" }] }),
   component: AdminLayout,
 });
@@ -18,13 +25,15 @@ function AdminLayout() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const links = [
-    { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+    ...(admin.isSuper ? [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }] : []),
     { to: "/admin/vehicles", label: "Inventory", icon: Car, exact: true },
     { to: "/admin/vehicles/new", label: "Add vehicle", icon: PlusCircle },
     { to: "/admin/sold", label: "Sold vehicles", icon: CircleDollarSign },
     { to: "/admin/import", label: "CSV import", icon: FileUp },
-    ...(admin.isSuper ? [{ to: "/admin/admins", label: "Manage admins", icon: Users }, { to: "/admin/activity", label: "Activity log", icon: Activity }] : []),
-  ] as const;
+    ...(admin.perms.bookings ? [{ to: "/admin/bookings", label: "Bookings", icon: CalendarCheck }] : []),
+    ...(admin.perms.customers ? [{ to: "/admin/customers", label: "Customers", icon: UserRound }] : []),
+    ...(admin.isSuper ? [{ to: "/admin/admins", label: "Manage staff", icon: Users }, { to: "/admin/activity", label: "Activity log", icon: Activity }] : []),
+  ];
 
   async function signOut() {
     await qc.cancelQueries(); qc.clear();
