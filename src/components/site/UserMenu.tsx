@@ -33,7 +33,7 @@ function CopyId({ value }: { value: string }) {
     }
   }
   return (
-    <button type="button" onClick={copy} aria-label="Copy customer ID" className="inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-foreground">
+    <button type="button" onClick={copy} aria-label="Copy customer ID" className="inline-flex items-center gap-1.5 font-mono text-xs text-champagne hover:text-ink-foreground">
       {value} {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
     </button>
   );
@@ -82,16 +82,16 @@ export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile"
         <span className="max-w-[10rem] truncate">{displayName}</span>
         <ChevronDown className="h-4 w-4 opacity-70" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={8} onPointerEnter={show} onPointerLeave={hide} className="w-64">
+      <DropdownMenuContent align="end" sideOffset={8} onPointerEnter={show} onPointerLeave={hide} className="w-64 border-ink-line bg-ink text-ink-foreground shadow-lift">
         <DropdownMenuLabel className="space-y-1 font-normal">
-          <p className="text-xs text-muted-foreground">Signed in as</p>
-          <p className="truncate text-sm font-semibold">{displayName}</p>
-          <p className="truncate text-xs text-muted-foreground">{email}</p>
+          <p className="text-xs uppercase tracking-wider text-ink-muted">Signed in as</p>
+          <p className="truncate text-sm font-semibold text-ink-foreground">{displayName}</p>
+          <p className="truncate text-xs text-ink-muted">{email}</p>
           {profile && <CopyId value={profile.customerNumber} />}
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild><Link to="/account"><Settings className="mr-2 h-4 w-4" /> Settings</Link></DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => { void signOut(); }} className="text-crimson focus:text-crimson"><LogOut className="mr-2 h-4 w-4" /> Log out</DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-ink-line" />
+        <DropdownMenuItem asChild className="cursor-pointer focus:bg-ink-soft focus:text-ink-foreground"><Link to="/account"><Settings className="mr-2 h-4 w-4 text-champagne" /> Settings</Link></DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => { void signOut(); }} className="cursor-pointer text-[oklch(0.72_0.15_25)] focus:bg-ink-soft focus:text-[oklch(0.78_0.15_25)]"><LogOut className="mr-2 h-4 w-4" /> Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
