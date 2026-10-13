@@ -40,6 +40,9 @@ export function useCustomer() {
   });
 
   const email = user?.email ?? "";
-  const displayName = profile?.fullName ?? (email ? email.split("@")[0] ?? email : "");
+  // Name shown in the navbar: the saved profile name, else the name typed at signup, else the email's username.
+  const rawMeta: unknown = user?.user_metadata?.["full_name"];
+  const signupName = typeof rawMeta === "string" ? rawMeta.trim() : "";
+  const displayName = profile?.fullName ?? (signupName || (email ? email.split("@")[0] ?? email : ""));
   return { user, ready, profile: profile ?? null, email, displayName };
 }

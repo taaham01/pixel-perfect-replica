@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, LogOut, Settings, UserRound } from "lucide-react";
+import { Check, ChevronDown, Copy, LogOut, Settings, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/hooks/use-customer";
@@ -41,14 +41,12 @@ function CopyId({ value }: { value: string }) {
 
 /** Navbar account area: Sign In when signed out; name, customer ID, settings and log out when signed in. */
 export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile" }) {
-  const { user, ready, profile, email } = useCustomer();
+  const { user, ready, profile, email, displayName } = useCustomer();
   const signOut = useSignOut();
   const [open, setOpen] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   const show = () => { window.clearTimeout(timer.current); setOpen(true); };
   const hide = () => { timer.current = window.setTimeout(() => setOpen(false), 150); };
-  // The username is whatever comes before the @ in the email address.
-  const username = email.split("@")[0] || email;
 
   if (!ready) return layout === "desktop" ? <span className="h-9 w-24" aria-hidden /> : null;
 
@@ -62,7 +60,7 @@ export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile"
     return (
       <div className="border-b border-ink-line py-4">
         <p className="text-xs uppercase tracking-wider text-ink-muted">Signed in as</p>
-        <p className="mt-1 text-lg font-semibold text-ink-foreground">{username}</p>
+        <p className="mt-1 text-lg font-semibold text-ink-foreground">{displayName}</p>
         {profile && <p className="mt-0.5 font-mono text-xs text-champagne">{profile.customerNumber}</p>}
         <div className="mt-4 flex gap-5 text-sm font-medium text-ink-foreground">
           <Link to="/account" className="inline-flex items-center gap-2"><Settings className="h-4 w-4" /> Settings</Link>
@@ -75,17 +73,19 @@ export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile"
   return (
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger
-        aria-label={`Account menu for ${username}`}
+        aria-label={`Account menu for ${displayName}`}
         onPointerEnter={show}
         onPointerLeave={hide}
-        className="grid h-9 w-9 place-items-center rounded-full border border-ink-foreground/25 text-ink-foreground outline-none transition-colors hover:bg-ink-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-ink-foreground/10"
+        className="flex h-9 items-center gap-2 rounded-sm border border-ink-foreground/25 pl-1.5 pr-2.5 text-sm font-semibold text-ink-foreground outline-none transition-colors hover:bg-ink-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-ink-foreground/10"
       >
-        <UserRound className="h-5 w-5" strokeWidth={1.75} />
+        <span className="grid h-6 w-6 place-items-center rounded-full bg-crimson text-primary-foreground"><UserRound className="h-3.5 w-3.5" strokeWidth={2} /></span>
+        <span className="max-w-[10rem] truncate">{displayName}</span>
+        <ChevronDown className="h-4 w-4 opacity-70" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} onPointerEnter={show} onPointerLeave={hide} className="w-64">
         <DropdownMenuLabel className="space-y-1 font-normal">
           <p className="text-xs text-muted-foreground">Signed in as</p>
-          <p className="truncate text-sm font-semibold">{username}</p>
+          <p className="truncate text-sm font-semibold">{displayName}</p>
           <p className="truncate text-xs text-muted-foreground">{email}</p>
           {profile && <CopyId value={profile.customerNumber} />}
         </DropdownMenuLabel>

@@ -34,11 +34,11 @@ export function Navbar() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 lg:flex">
-          <UserMenu />
           <a href={whatsappLink()} target="_blank" rel="noreferrer" className={btn({ variant: "ghostLight", size: "sm" })}>
             <MessageCircle className="h-4 w-4" /> WhatsApp Us
           </a>
           <Link to="/vehicles" className={btn({ variant: "primary", size: "sm" })}>Browse Vehicles</Link>
+          <UserMenu />
         </div>
         <button onClick={() => setOpen((o) => !o)} className="relative h-10 w-10 lg:hidden" aria-label="Toggle menu" aria-expanded={open}>
           <span className={cn("absolute left-2 right-2 h-0.5 bg-ink-foreground transition-all duration-300", open ? "top-1/2 rotate-45" : "top-[14px]")} />
