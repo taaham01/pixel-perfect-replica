@@ -1,13 +1,17 @@
 import { z } from "zod";
 
-/** Phone numbers: digits with an optional leading +, spaces, dashes, dots and brackets. */
+/** Turns "+254 (700) 000-111" into "+254700000111"; numbers without a leading + are left as digits only. */
+export function normalizePhone(value: string): string {
+  const t = value.trim();
+  const digits = t.replace(/\D/g, "");
+  return t.startsWith("+") ? `+${digits}` : digits;
+}
+
+/** International format with country code (E.164), as required for SMS verification. */
 export const phoneSchema = z
   .string()
-  .trim()
-  .min(6, "Enter a valid phone number")
-  .max(30, "Enter a valid phone number")
-  .regex(/^\+?[0-9 ().-]+$/, "Use digits only, with an optional leading +")
-  .refine((v) => v.replace(/\D/g, "").length >= 6, "Enter a valid phone number");
+  .transform(normalizePhone)
+  .pipe(z.string().regex(/^\+[1-9]\d{7,14}$/, "Enter your number with the country code, e.g. +254 700 000000"));
 
 export const detailsSchema = z.object({
   fullName: z.string().trim().min(1, "Enter your full name").max(120),

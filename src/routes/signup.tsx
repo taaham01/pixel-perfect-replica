@@ -78,7 +78,7 @@ function Signup() {
               {countries.map((c) => <option key={c}>{c}</option>)}
             </select>
           </label>
-          <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Phone / WhatsApp <span className="text-crimson">*</span></span><input name="phone" type="tel" required autoComplete="tel" placeholder="+254 …" maxLength={30} className={fieldCls} /></label>
+          <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Phone / WhatsApp <span className="text-crimson">*</span></span><input name="phone" type="tel" required autoComplete="tel" placeholder="+254 700 000000" maxLength={30} className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">Include the country code. We'll text you a code to verify it before you can book.</span></label>
         </div>
         <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Email <span className="text-crimson">*</span></span><input name="email" type="email" required autoComplete="email" maxLength={254} className={fieldCls} /></label>
         <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password <span className="text-crimson">*</span></span><input name="password" type="password" required minLength={8} maxLength={128} autoComplete="new-password" className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">At least 8 characters.</span></label>

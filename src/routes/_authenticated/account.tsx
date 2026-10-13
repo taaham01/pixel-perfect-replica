@@ -8,14 +8,14 @@ import { countries, site } from "@/config/site";
 import { PageHero, btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { detailsSchema } from "@/lib/customer";
+import { fetchCustomerDetails } from "@/lib/customer-details";
+import { PhoneVerification } from "@/components/site/PhoneVerification";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({ meta: [{ title: `My Account — ${site.name}` }, { name: "robots", content: "noindex" }] }),
   component: Account,
 });
-
-type Details = { customerNumber: string; fullName: string; country: string; phone: string; phoneVerified: boolean } | null;
 
 function Account() {
   const { user } = Route.useRouteContext();
@@ -25,24 +25,7 @@ function Account() {
 
   const { data: details, isLoading, error } = useQuery({
     queryKey: ["customer-details", user.id],
-    queryFn: async (): Promise<Details> => {
-      const { data: p, error } = await supabase
-        .from("profiles")
-        .select("customer_number, full_name, country, phone_verified")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (error) throw error;
-      if (!p) return null;
-      // Phone numbers can't be selected directly; this function returns only your own.
-      const { data: phones } = await supabase.rpc("get_customer_phones", { _user_ids: [user.id] });
-      return {
-        customerNumber: p.customer_number,
-        fullName: p.full_name ?? "",
-        country: p.country ?? "",
-        phone: phones?.[0]?.phone ?? "",
-        phoneVerified: p.phone_verified,
-      };
-    },
+    queryFn: () => fetchCustomerDetails(user.id),
   });
 
   const bookings = useQuery({
@@ -100,6 +83,10 @@ function Account() {
         <div className="lg:col-span-5">
           {isLoading && <p className="text-sm text-muted-foreground">Loading your details…</p>}
           {error && <p className="rounded-sm bg-crimson/10 p-3 text-sm text-crimson" role="alert">We couldn't load your details. Please refresh and try again.</p>}
+
+          {details && !showForm && details.phone && !details.phoneVerified && (
+            <div className="mb-6"><PhoneVerification phone={details.phone} userId={user.id} /></div>
+          )}
 
           {details && !showForm && (
             <div className="rounded-sm border border-border p-6">

@@ -22,3 +22,19 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Phone verification (SMS codes)
+
+Customers must verify their phone number with a one-time code before they can book a vehicle.
+Codes are sent with [Twilio](https://www.twilio.com). Set these as server environment variables
+(Lovable Cloud secrets while on Lovable, your hosting panel on Hostinger):
+
+| Variable | What it is |
+| --- | --- |
+| `TWILIO_ACCOUNT_SID` | Account SID from the Twilio console |
+| `TWILIO_AUTH_TOKEN` | Auth token from the Twilio console |
+| `TWILIO_FROM` | A Twilio phone number (or messaging service sender) that can text your customers' countries |
+
+Until these are set, "Send code" shows an error. A Twilio trial account can only text numbers you have
+verified in Twilio, so upgrade it before real customers sign up. The code logic is in
+`src/lib/otp.functions.ts`.
