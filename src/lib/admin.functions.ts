@@ -127,21 +127,29 @@ export const setStaffPermissions = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Customers = accounts with a profile and no staff role. Needs Super Admin or "view customers" permission (checked by RLS). */
+/** Customers = accounts with a profile and no staff role. Needs Super Admin or "view customers" permission. Phone numbers are returned for Super Admins only. */
 export const listCustomers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data: ok } = await context.supabase.rpc("has_perm", { _user_id: context.userId, _perm: "customers" });
     if (!ok) throw new Error("You do not have permission to view customers.");
-    const { data: profiles } = await context.supabase.from("profiles").select("*").order("created_at", { ascending: false });
+    // Phone numbers are not selectable through the API; only Super Admins can fetch them (via get_customer_phones).
+    const { data: profiles } = await context.supabase.from("profiles")
+      .select("id, full_name, country, phone_verified, customer_number, created_at, updated_at")
+      .order("created_at", { ascending: false });
     const admin = await getAdmin();
     const { data: roles } = await admin.from("user_roles").select("user_id");
     const staff = new Set((roles ?? []).map((r) => r.user_id));
     const rows = (profiles ?? []).filter((p) => !staff.has(p.id));
+    const { data: isSuper } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "super_admin" });
+    const { data: phones } = isSuper && rows.length
+      ? await context.supabase.rpc("get_customer_phones", { _user_ids: rows.map((r) => r.id) })
+      : { data: [] as { user_id: string; phone: string }[] };
+    const phoneById = new Map((phones ?? []).map((x) => [x.user_id, x.phone]));
     return Promise.all(rows.map(async (p) => {
       const { data } = await admin.auth.admin.getUserById(p.id);
       const u = data.user;
-      return { ...p, email: u?.email ?? "", active: !(u?.banned_until && new Date(u.banned_until) > new Date()) };
+      return { ...p, phone: phoneById.get(p.id) ?? null, email: u?.email ?? "", active: !(u?.banned_until && new Date(u.banned_until) > new Date()) };
     }));
   });
 

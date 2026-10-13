@@ -5,6 +5,7 @@ import { navLinks, whatsappLink } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import { btn } from "./primitives";
+import { UserMenu } from "./UserMenu";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -37,6 +38,7 @@ export function Navbar() {
             <MessageCircle className="h-4 w-4" /> WhatsApp Us
           </a>
           <Link to="/vehicles" className={btn({ variant: "primary", size: "sm" })}>Browse Vehicles</Link>
+          <UserMenu />
         </div>
         <button onClick={() => setOpen((o) => !o)} className="relative h-10 w-10 lg:hidden" aria-label="Toggle menu" aria-expanded={open}>
           <span className={cn("absolute left-2 right-2 h-0.5 bg-ink-foreground transition-all duration-300", open ? "top-1/2 rotate-45" : "top-[14px]")} />
@@ -50,6 +52,7 @@ export function Navbar() {
             {navLinks.map((l) => (
               <Link key={l.to} to={l.to} className="border-b border-ink-line py-4 text-lg font-semibold text-ink-foreground">{l.label}</Link>
             ))}
+            <UserMenu layout="mobile" />
             <div className="mt-6 grid grid-cols-2 gap-3">
               <a href={whatsappLink()} target="_blank" rel="noreferrer" className={btn({ variant: "whatsapp" })}><MessageCircle className="h-4 w-4" /> WhatsApp</a>
               <Link to="/vehicles" className={btn({ variant: "primary" })}>Browse</Link>

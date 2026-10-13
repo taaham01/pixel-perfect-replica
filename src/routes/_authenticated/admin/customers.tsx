@@ -28,15 +28,16 @@ function Customers() {
       <div className="mt-6 overflow-x-auto rounded-sm border border-border bg-card">
         <table className="w-full text-sm">
           <thead className="bg-secondary text-left text-xs uppercase text-muted-foreground">
-            <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Status</th>{admin.isSuper && <th className="p-3">Actions</th>}</tr>
+            <tr><th className="p-3">ID</th><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Phone</th><th className="p-3">Status</th>{admin.isSuper && <th className="p-3">Actions</th>}</tr>
           </thead>
           <tbody>
-            {q.data?.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No customers yet.</td></tr>}
+            {q.data?.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No customers yet.</td></tr>}
             {q.data?.map((c) => (
               <tr key={c.id} className="border-t border-border">
+                <td className="p-3 font-mono text-xs">{c.customer_number}</td>
                 <td className="p-3">{c.full_name ?? "—"}</td>
                 <td className="p-3">{c.email}</td>
-                <td className="p-3">{c.phone ?? "—"} {c.phone_verified && <span className="text-xs text-champagne">✓ verified</span>}</td>
+                <td className="p-3">{admin.isSuper ? (c.phone ?? "—") : <span className="text-muted-foreground">Super Admin only</span>} {c.phone_verified && <span className="text-xs text-champagne">✓ verified</span>}</td>
                 <td className="p-3">{c.active ? "Active" : <span className="text-crimson">Suspended</span>}</td>
                 {admin.isSuper && (
                   <td className="flex flex-wrap gap-2 p-3">

@@ -6,6 +6,7 @@ import { getVehicleBySlug } from "@/lib/vehicles.functions";
 import { btn } from "@/components/site/primitives";
 import { SpecificationTable, VehicleCard, VehicleGallery } from "@/components/site/vehicles";
 import { InquiryForm } from "@/components/site/forms";
+import { BookVehicle } from "@/components/site/BookVehicle";
 import { vehicleWhatsappMessage } from "@/components/site/WhatsAppButton";
 import { cn } from "@/lib/utils";
 
@@ -100,6 +101,7 @@ function VehicleDetail() {
               : <a href="#inquiry" className={btn({ variant: "primary", size: "lg" })}>Request Export Quote</a>}
             <a href={wa} target="_blank" rel="noreferrer" className={btn({ variant: "whatsapp", size: "lg" })}><MessageCircle className="h-4 w-4" /> Chat on WhatsApp</a>
           </div>
+          {v.status === "available" && <BookVehicle vehicleId={v.id} vehicleName={name} />}
         </div>
       </section>
 

@@ -1,48 +1,57 @@
 import { useState, type FormEvent } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { site } from "@/config/site";
-import { AuthCard } from "@/components/admin/AuthCard";
+import { AuthShell } from "@/components/site/AuthShell";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
+import { authErrorMessage, safeRedirect } from "@/lib/customer";
 import { cn } from "@/lib/utils";
 
+const t = `Sign In — ${site.name}`;
+
 export const Route = createFileRoute("/login")({
-  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({
-    redirect: typeof s.redirect === "string" && s.redirect.startsWith("/") && !s.redirect.startsWith("//") ? s.redirect : undefined,
-  }),
-  head: () => ({
-    meta: [
-      { title: `Customer Sign In — ${site.name}` },
-      { name: "description", content: "Sign in to view your profile and booking requests." },
-      { property: "og:title", content: `Customer Sign In — ${site.name}` },
-      { property: "og:description", content: "Sign in to view your profile and booking requests." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  validateSearch: (s: Record<string, unknown>) => ({ redirect: safeRedirect(s.redirect) }),
+  head: () => ({ meta: [{ title: t }, { name: "description", content: "Sign in to reserve vehicles and manage your account." }, { name: "robots", content: "noindex" }] }),
   component: Login,
 });
 
 function Login() {
   const { redirect } = Route.useSearch();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const { error } = await supabase.auth.signInWithPassword({ email: String(fd.get("email")).trim(), password: String(fd.get("password")) });
-    if (error) { setError("Incorrect email or password."); return; }
-    navigate({ to: redirect ?? "/account", replace: true });
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: String(fd.get("email")).trim(),
+      password: String(fd.get("password")),
+    });
+    setLoading(false);
+    if (error) return setError(authErrorMessage(error.message));
+    router.history.push(redirect ?? "/account");
   }
+
   return (
-    <AuthCard title="Customer sign in">
+    <AuthShell
+      eyebrow="Customer account"
+      title="Sign in"
+      subtitle="Sign in to reserve vehicles and track your reservations."
+      footer={<>New here? <Link to="/signup" search={{ redirect }} className="text-champagne hover:underline">Create an account</Link></>}
+    >
       <form onSubmit={onSubmit} className="grid gap-4">
-        <input name="email" type="email" required placeholder="Email" className={fieldCls} />
-        <input name="password" type="password" required placeholder="Password" className={fieldCls} />
-        {error && <p className="text-sm text-crimson" role="alert">{error}</p>}
-        <button className={cn(btn({ variant: "primary" }), "w-full")}>Sign in</button>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Email</span><input name="email" type="email" required autoComplete="email" className={fieldCls} /></label>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password</span><input name="password" type="password" required autoComplete="current-password" className={fieldCls} /></label>
+        <Link to="/forgot-password" className="-mt-2 justify-self-end text-xs text-crimson hover:underline">Forgot password?</Link>
+        {error && <p className="rounded-sm bg-crimson/10 p-3 text-sm text-crimson" role="alert">{error}</p>}
+        <button disabled={loading} className={cn(btn({ variant: "primary" }), "w-full")}>{loading && <Loader2 className="h-4 w-4 animate-spin" />} Sign in</button>
       </form>
-    </AuthCard>
+      <p className="mt-6 text-center text-xs text-muted-foreground">Staff? <Link to="/admin/login" className="text-crimson hover:underline">Admin sign in</Link></p>
+    </AuthShell>
   );
 }

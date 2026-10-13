@@ -24,8 +24,11 @@ function Bookings() {
       if (error) throw error;
       const ids = [...new Set(data.map((b) => b.user_id))];
       const { data: profiles } = admin.perms.customers || admin.perms.bookings
-        ? await supabase.from("profiles").select("id, full_name, phone").in("id", ids) : { data: [] };
-      const byId = new Map((profiles ?? []).map((p) => [p.id, p]));
+        ? await supabase.from("profiles").select("id, full_name, customer_number").in("id", ids) : { data: [] };
+      // Phone numbers come back only for Super Admins; staff see the customer ID instead.
+      const { data: phones } = admin.isSuper && ids.length ? await supabase.rpc("get_customer_phones", { _user_ids: ids }) : { data: [] };
+      const phoneById = new Map((phones ?? []).map((x) => [x.user_id, x.phone]));
+      const byId = new Map((profiles ?? []).map((p) => [p.id, { ...p, phone: phoneById.get(p.id) ?? null }]));
       return data.map((b) => ({ ...b, customer: byId.get(b.user_id) }));
     },
   });
@@ -52,7 +55,7 @@ function Bookings() {
               <tr key={b.id} className="border-t border-border align-top">
                 <td className="p-3 whitespace-nowrap">{new Date(b.created_at).toLocaleDateString()}</td>
                 <td className="p-3">{b.vehicles ? `${b.vehicles.year} ${b.vehicles.make} ${b.vehicles.model}` : "—"}<div className="font-mono text-xs text-muted-foreground">{b.vehicles?.stock_id}</div></td>
-                <td className="p-3">{b.customer?.full_name ?? "—"}<div className="text-xs text-muted-foreground">{b.customer?.phone}</div></td>
+                <td className="p-3">{b.customer?.full_name ?? "—"}<div className="font-mono text-xs text-muted-foreground">{b.customer?.customer_number}</div>{b.customer?.phone && <div className="text-xs text-muted-foreground">{b.customer.phone}</div>}</td>
                 <td className="max-w-xs p-3 text-muted-foreground">{b.message}</td>
                 <td className="p-3">
                   <select value={b.status} onChange={(e) => setStatus(b.id, e.target.value as BStatus)} className="rounded-sm border border-border bg-background px-2 py-1 capitalize">

@@ -119,6 +119,7 @@ export type Database = {
         Row: {
           country: string | null
           created_at: string
+          customer_number: string
           full_name: string | null
           id: string
           phone: string | null
@@ -128,6 +129,7 @@ export type Database = {
         Insert: {
           country?: string | null
           created_at?: string
+          customer_number?: string
           full_name?: string | null
           id: string
           phone?: string | null
@@ -137,6 +139,7 @@ export type Database = {
         Update: {
           country?: string | null
           created_at?: string
+          customer_number?: string
           full_name?: string | null
           id?: string
           phone?: string | null
@@ -350,6 +353,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_customer_phones: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          phone: string
+          user_id: string
+        }[]
+      }
       has_perm: { Args: { _perm: string; _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
