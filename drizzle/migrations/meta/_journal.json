@@ -29,6 +29,13 @@
       "when": 1791852889563,
       "tag": "0003_customer_ids_and_phone_privacy",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791927123245,
+      "tag": "0004_customer_ids_and_phone_privacy",
+      "breakpoints": true
     }
   ]
 }
