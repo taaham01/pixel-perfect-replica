@@ -4,12 +4,18 @@
 --     so staff who may view customers/bookings can still see who someone is, but not their number
 --  3. signup details (phone, country) are copied into the profile by the signup trigger
 
+-- This file is safe to run more than once: every statement is idempotent.
+
 -- 1. Customer IDs ------------------------------------------------------------
 CREATE SEQUENCE IF NOT EXISTS public.customer_number_seq;
 ALTER TABLE public.profiles
-  ADD COLUMN customer_number text DEFAULT ('AHM-' || lpad(nextval('public.customer_number_seq')::text, 6, '0'));
+  ADD COLUMN IF NOT EXISTS customer_number text DEFAULT ('AHM-' || lpad(nextval('public.customer_number_seq')::text, 6, '0'));
 ALTER TABLE public.profiles ALTER COLUMN customer_number SET NOT NULL;
-ALTER TABLE public.profiles ADD CONSTRAINT profiles_customer_number_key UNIQUE (customer_number);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'profiles_customer_number_key' AND conrelid = 'public.profiles'::regclass) THEN
+    ALTER TABLE public.profiles ADD CONSTRAINT profiles_customer_number_key UNIQUE (customer_number);
+  END IF;
+END $$;
 ALTER SEQUENCE public.customer_number_seq OWNED BY public.profiles.customer_number;
 
 -- Extends the existing guard: customers can never choose or change their ID.
