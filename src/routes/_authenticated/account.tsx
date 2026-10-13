@@ -62,7 +62,7 @@ function Account() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const parsed = detailsSchema.safeParse({ fullName: fd.get("fullName"), country: fd.get("country"), phone: fd.get("phone") });
-    if (!parsed.success) return toast.error(parsed.error.issues[0]?.message ?? "Please check your details.");
+    if (!parsed.success) { toast.error(parsed.error.issues[0]?.message ?? "Please check your details."); return; }
     save.mutate(parsed.data);
   }
 

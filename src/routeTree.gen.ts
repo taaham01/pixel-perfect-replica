@@ -15,10 +15,13 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DealersRouteImport } from './routes/dealers'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RequestACarRouteImport } from './routes/request-a-car'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SoldCarsRouteImport } from './routes/sold-cars'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
@@ -69,6 +72,11 @@ const DealersRoute = DealersRouteImport.update({
   path: '/dealers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
@@ -87,6 +95,16 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const RequestACarRoute = RequestACarRouteImport.update({
   id: '/request-a-car',
   path: '/request-a-car',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SoldCarsRoute = SoldCarsRouteImport.update({
@@ -205,10 +223,13 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/dealers': typeof DealersRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/request-a-car': typeof RequestACarRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
@@ -236,10 +257,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/dealers': typeof DealersRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/request-a-car': typeof RequestACarRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
   '/account': typeof AuthenticatedAccountRoute
@@ -268,10 +292,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/dealers': typeof DealersRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/how-it-works': typeof HowItWorksRoute
   '/login': typeof LoginRoute
   '/privacy': typeof PrivacyRoute
   '/request-a-car': typeof RequestACarRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/signup': typeof SignupRoute
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
@@ -301,10 +328,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/dealers'
+    | '/forgot-password'
     | '/how-it-works'
     | '/login'
     | '/privacy'
     | '/request-a-car'
+    | '/reset-password'
+    | '/signup'
     | '/sold-cars'
     | '/terms'
     | '/admin'
@@ -332,10 +362,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/dealers'
+    | '/forgot-password'
     | '/how-it-works'
     | '/login'
     | '/privacy'
     | '/request-a-car'
+    | '/reset-password'
+    | '/signup'
     | '/sold-cars'
     | '/terms'
     | '/account'
@@ -363,10 +396,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/contact'
     | '/dealers'
+    | '/forgot-password'
     | '/how-it-works'
     | '/login'
     | '/privacy'
     | '/request-a-car'
+    | '/reset-password'
+    | '/signup'
     | '/sold-cars'
     | '/terms'
     | '/_authenticated/admin'
@@ -396,10 +432,13 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   DealersRoute: typeof DealersRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   HowItWorksRoute: typeof HowItWorksRoute
   LoginRoute: typeof LoginRoute
   PrivacyRoute: typeof PrivacyRoute
   RequestACarRoute: typeof RequestACarRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SignupRoute: typeof SignupRoute
   SoldCarsRoute: typeof SoldCarsRoute
   TermsRoute: typeof TermsRoute
   AdminLoginRoute: typeof AdminLoginRoute
@@ -453,6 +492,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DealersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/how-it-works': {
       id: '/how-it-works'
       path: '/how-it-works'
@@ -479,6 +525,20 @@ declare module '@tanstack/react-router' {
       path: '/request-a-car'
       fullPath: '/request-a-car'
       preLoaderRoute: typeof RequestACarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sold-cars': {
@@ -679,10 +739,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   DealersRoute: DealersRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   HowItWorksRoute: HowItWorksRoute,
   LoginRoute: LoginRoute,
   PrivacyRoute: PrivacyRoute,
   RequestACarRoute: RequestACarRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SignupRoute: SignupRoute,
   SoldCarsRoute: SoldCarsRoute,
   TermsRoute: TermsRoute,
   AdminLoginRoute: AdminLoginRoute,
