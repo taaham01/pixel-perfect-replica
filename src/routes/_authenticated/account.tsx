@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, Loader2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { fieldCls } from "@/components/site/vehicles";
 import { detailsSchema } from "@/lib/customer";
 import { fetchCustomerDetails } from "@/lib/customer-details";
 import { PhoneVerification } from "@/components/site/PhoneVerification";
+import { useSaveProfile } from "@/hooks/use-save-profile";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -37,26 +38,7 @@ function Account() {
     },
   });
 
-  const save = useMutation({
-    mutationFn: async (v: { fullName: string; country: string; phone: string }) => {
-      const row = { full_name: v.fullName, country: v.country, phone: v.phone };
-      const { data: existing, error: readErr } = await supabase.from("profiles").select("id").eq("id", user.id).maybeSingle();
-      if (readErr) throw readErr;
-      const { error } = existing
-        ? await supabase.from("profiles").update(row).eq("id", user.id)
-        : await supabase.from("profiles").insert({ id: user.id, ...row });
-      if (error) throw error;
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["customer-details", user.id] }),
-        qc.invalidateQueries({ queryKey: ["customer-summary", user.id] }),
-      ]);
-      setEditing(false);
-      toast.success("Your details have been saved.");
-    },
-    onError: (e: Error) => toast.error(e.message || "Could not save your details."),
-  });
+  const save = useSaveProfile(user.id, () => setEditing(false));
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
