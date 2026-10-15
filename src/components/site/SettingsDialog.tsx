@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { btn } from "./primitives";
 import { fieldCls } from "./vehicles";
 import { cn } from "@/lib/utils";
+import { changeOwnPassword } from "@/lib/password.functions";
 import { PasswordInput } from "@/components/site/PasswordInput";
 
 /** Settings panel that opens on top of the current page (the page stays visible behind it). */
@@ -39,16 +40,23 @@ export function SettingsDialog({ open, onOpenChange, staff }: {
     if (password !== String(fd.get("confirm") ?? "")) return setError("The two passwords don't match.");
     setLoading(true);
     setError(null);
-    const { error } = await supabase.auth.updateUser({ password });
-    setLoading(false);
-    if (error) {
-      const m = error.message.toLowerCase();
-      return setError(
-        m.includes("same") ? "Choose a password you haven't used before."
-        : m.includes("weak") || m.includes("pwned") || m.includes("known") ? "That password is too easy to guess. Please choose a stronger one."
-        : "We couldn't update your password. Please sign in again and retry.",
-      );
+    let failure: string | null = null;
+    const first = await supabase.auth.updateUser({ password });
+    if (first.error) {
+      const m = first.error.message.toLowerCase();
+      if (m.includes("same") || m.includes("different")) failure = "Choose a password you haven't used before.";
+      else if (m.includes("weak") || m.includes("pwned") || m.includes("known")) failure = "That password is too easy to guess. Please choose a stronger one.";
+      else {
+        // The browser-side update was refused (for example it wants a recent sign-in), so set it directly on the server.
+        try {
+          await changeOwnPassword({ data: { password } });
+        } catch (err) {
+          failure = `We couldn't update your password: ${err instanceof Error ? err.message : first.error.message}`;
+        }
+      }
     }
+    setLoading(false);
+    if (failure) return setError(failure);
     form.reset();
     toast.success("Password changed.");
     onOpenChange(false);
