@@ -7,6 +7,7 @@ import { AuthCard } from "@/components/admin/AuthCard";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { cn } from "@/lib/utils";
+import { PasswordInput } from "@/components/site/PasswordInput";
 
 export const Route = createFileRoute("/admin/login")({
   validateSearch: (s: Record<string, unknown>): { redirect?: string; denied?: boolean } => ({
@@ -47,7 +48,7 @@ function Login() {
     <AuthCard title="Sign in" subtitle="For authorised staff only. Accounts are created by a Super Admin.">
       <form onSubmit={onSubmit} className="grid gap-4">
         <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Email</span><input name="email" type="email" required autoComplete="email" className={fieldCls} /></label>
-        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password</span><input name="password" type="password" required autoComplete="current-password" className={fieldCls} /></label>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password</span><PasswordInput name="password" required autoComplete="current-password" className={fieldCls} /></label>
         <Link to="/forgot-password" className="-mt-2 justify-self-end text-xs text-crimson hover:underline">Forgot password?</Link>
         {error && <p className="rounded-sm bg-crimson/10 p-3 text-sm text-crimson" role="alert">{error}</p>}
         <button disabled={loading} className={cn(btn({ variant: "primary" }), "w-full")}>{loading && <Loader2 className="h-4 w-4 animate-spin" />} Sign in</button>

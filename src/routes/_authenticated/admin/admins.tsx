@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { createAdmin, listAdmins, listStaffPermissions, setAdminActive, setAdminRole, setStaffPermissions } from "@/lib/admin.functions";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
+import { PasswordInput } from "@/components/site/PasswordInput";
 
 export const Route = createFileRoute("/_authenticated/admin/admins")({
   beforeLoad: ({ context }) => { if (!context.admin.isSuper) throw redirect({ to: "/admin/inventory" }); },
@@ -38,7 +39,7 @@ function Admins() {
       <h1 className="text-2xl font-bold">Manage staff</h1>
       <form onSubmit={onCreate} className="grid gap-3 rounded-sm border border-border bg-card p-5 md:grid-cols-4">
         <input name="email" type="email" required placeholder="Email" className={fieldCls} />
-        <input name="password" type="password" minLength={10} required placeholder="Temporary password (10+)" className={fieldCls} />
+        <PasswordInput name="password" minLength={10} required placeholder="Temporary password (10+)" className={fieldCls} />
         <select name="role" className={fieldCls}><option value="inventory_manager">Inventory Team</option><option value="super_admin">Super Admin</option></select>
         <button disabled={busy} className={btn({ variant: "primary" })}>Create account</button>
       </form>
