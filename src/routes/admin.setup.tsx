@@ -9,6 +9,7 @@ import { AuthCard } from "@/components/admin/AuthCard";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { cn } from "@/lib/utils";
+import { PasswordInput } from "@/components/site/PasswordInput";
 
 export const Route = createFileRoute("/admin/setup")({
   loader: () => getSetupStatus(),
@@ -61,8 +62,8 @@ function Setup() {
     <AuthCard title="Create the first Super Admin" subtitle="This page works only once. After the first Super Admin is created it is permanently locked.">
       <form onSubmit={onSubmit} className="grid gap-4">
         <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Email</span><input name="email" type="email" required className={fieldCls} /></label>
-        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password (min. 10 characters)</span><input name="password" type="password" minLength={10} required className={fieldCls} /></label>
-        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Confirm password</span><input name="confirm" type="password" minLength={10} required className={fieldCls} /></label>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password (min. 10 characters)</span><PasswordInput name="password" minLength={10} required className={fieldCls} /></label>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Confirm password</span><PasswordInput name="confirm" minLength={10} required className={fieldCls} /></label>
         {error && <p className="rounded-sm bg-crimson/10 p-3 text-sm text-crimson" role="alert">{error}</p>}
         <button disabled={loading} className={cn(btn({ variant: "primary" }), "w-full")}>{loading && <Loader2 className="h-4 w-4 animate-spin" />} Create Super Admin</button>
       </form>
