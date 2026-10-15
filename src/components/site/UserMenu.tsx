@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/hooks/use-customer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { btn } from "./primitives";
+import { SettingsDialog } from "./SettingsDialog";
 
 function useSignOut() {
   const qc = useQueryClient();
@@ -44,6 +45,7 @@ export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile"
   const { user, ready, profile, email, displayName } = useCustomer();
   const signOut = useSignOut();
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   const show = () => { window.clearTimeout(timer.current); setOpen(true); };
   const hide = () => { timer.current = window.setTimeout(() => setOpen(false), 150); };
@@ -63,14 +65,17 @@ export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile"
         <p className="mt-1 text-lg font-semibold text-ink-foreground">{displayName}</p>
         {profile && <p className="mt-0.5 font-mono text-xs text-champagne">{profile.customerNumber}</p>}
         <div className="mt-4 flex gap-5 text-sm font-medium text-ink-foreground">
-          <Link to="/account" className="inline-flex items-center gap-2"><Settings className="h-4 w-4" /> Settings</Link>
+          <button onClick={() => setSettingsOpen(true)} className="inline-flex items-center gap-2"><Settings className="h-4 w-4" /> Settings</button>
           <button onClick={signOut} className="inline-flex items-center gap-2"><LogOut className="h-4 w-4" /> Log out</button>
         </div>
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
       </div>
     );
   }
 
   return (
+    <>
+    <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
       <DropdownMenuTrigger
         aria-label={`Account menu for ${displayName}`}
@@ -90,9 +95,10 @@ export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile"
           {profile && <CopyId value={profile.customerNumber} />}
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-ink-line" />
-        <DropdownMenuItem asChild className="cursor-pointer focus:bg-ink-soft focus:text-ink-foreground"><Link to="/account"><Settings className="mr-2 h-4 w-4 text-champagne" /> Settings</Link></DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => { setOpen(false); setSettingsOpen(true); }} className="cursor-pointer focus:bg-ink-soft focus:text-ink-foreground"><Settings className="mr-2 h-4 w-4 text-champagne" /> Settings</DropdownMenuItem>
         <DropdownMenuItem onSelect={() => { void signOut(); }} className="cursor-pointer text-[oklch(0.72_0.15_25)] focus:bg-ink-soft focus:text-[oklch(0.78_0.15_25)]"><LogOut className="mr-2 h-4 w-4" /> Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }
