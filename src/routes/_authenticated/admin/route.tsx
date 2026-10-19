@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { Logo } from "@/components/site/Logo";
 import { cn } from "@/lib/utils";
+import { isOwnerEmail } from "@/config/staff";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async ({ context }) => {
@@ -13,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
     const isSuper = context.roles.includes("super_admin");
     const { data: p } = await supabase.from("staff_permissions").select("*").eq("user_id", context.user.id).maybeSingle();
     const perms = { publish: isSuper || !!p?.can_publish, bookings: isSuper || !!p?.can_manage_bookings, customers: isSuper || !!p?.can_view_customers };
-    return { admin: { ...context.user, roles: context.roles, isSuper, perms } };
+    return { admin: { ...context.user, roles: context.roles, isSuper, isOwner: isSuper && isOwnerEmail(context.user.email), perms } };
   },
   head: () => ({ meta: [{ title: "Admin — AL-HASSAN MOTORS JAPAN" }, { name: "robots", content: "noindex" }] }),
   component: AdminLayout,

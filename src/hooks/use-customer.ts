@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { isOwnerEmail } from "@/config/staff";
 
-export type AccountType = "super_admin" | "admin" | "customer";
-export const accountTypeLabel: Record<AccountType, string> = { super_admin: "Super Admin", admin: "Admin", customer: "Customer" };
+export type AccountType = "owner" | "super_admin" | "admin" | "customer";
+export const accountTypeLabel: Record<AccountType, string> = { owner: "Owner", super_admin: "Super Admin", admin: "Admin", customer: "Customer" };
 
 export type CustomerSummary = { customerNumber: string; fullName: string; country: string } | null;
 
@@ -53,8 +54,10 @@ export function useCustomer() {
       return (data ?? []).map((r) => r.role as string);
     },
   });
-  // Who is signed in: Super Admin, Admin (any other staff role) or Customer.
-  const accountType: AccountType | null = !roles ? null : roles.includes("super_admin") ? "super_admin" : roles.length > 0 ? "admin" : "customer";
+  // Who is signed in: Owner, Super Admin, Admin (any other staff role) or Customer.
+  const accountType: AccountType | null = !roles ? null
+    : roles.includes("super_admin") ? (isOwnerEmail(user?.email) ? "owner" : "super_admin")
+    : roles.length > 0 ? "admin" : "customer";
 
   const email = user?.email ?? "";
   // Name shown in the navbar: the saved profile name, else the name typed at signup, else the email's username.

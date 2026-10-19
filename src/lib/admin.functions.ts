@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { OWNER_EMAIL, isOwnerEmail } from "@/config/staff";
 
 type Role = "super_admin" | "inventory_manager";
 const roleSchema = z.enum(["super_admin", "inventory_manager"]);
@@ -17,6 +18,30 @@ async function assertSuper(ctx: { supabase: any; userId: string }) {
   if (error || !data) throw new Error("Only a Super Admin can do this.");
 }
 
+/** True when this account is the website owner: the owner email, confirmed. */
+async function isOwnerUser(userId: string) {
+  const admin = await getAdmin();
+  const { data } = await admin.auth.admin.getUserById(userId);
+  return !!data.user?.email_confirmed_at && isOwnerEmail(data.user.email);
+}
+
+async function assertOwner(ctx: { userId: string }) {
+  if (!(await isOwnerUser(ctx.userId))) throw new Error("Only the owner account can do this.");
+}
+
+async function rolesOf(userId: string): Promise<Role[]> {
+  const admin = await getAdmin();
+  const { data } = await admin.from("user_roles").select("role").eq("user_id", userId);
+  return (data ?? []).map((r) => r.role as Role);
+}
+
+/** Rules for changing someone else's staff account: never the owner; Super Admins only by the owner. */
+async function assertCanManage(ctx: { userId: string }, targetId: string) {
+  if (targetId === ctx.userId) throw new Error("You cannot change your own staff access.");
+  if (await isOwnerUser(targetId)) throw new Error("The owner account cannot be changed.");
+  if ((await rolesOf(targetId)).includes("super_admin")) await assertOwner(ctx);
+}
+
 async function log(actorId: string | null, actorEmail: string | null, action: string, entityId: string, details: Record<string, unknown>) {
   const admin = await getAdmin();
   await admin.from("admin_activity").insert({ actor_id: actorId, actor_email: actorEmail, action, entity: "admin", entity_id: entityId, details: details as never });
@@ -24,27 +49,131 @@ async function log(actorId: string | null, actorEmail: string | null, action: st
 
 const actorEmail = (claims: unknown) => ((claims as { email?: string })?.email ?? null);
 
-/** Public: tells the setup page whether a first Super Admin still needs creating. Returns only a boolean. */
-export const getSetupStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const admin = await getAdmin();
-  const { count } = await admin.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "super_admin");
-  return { needsSetup: (count ?? 0) === 0 };
-});
+async function requestOrigin() {
+  const { getRequest } = await import("@tanstack/react-start/server");
+  const req = getRequest();
+  const fwdHost = req.headers.get("x-forwarded-host");
+  if (fwdHost) return `${req.headers.get("x-forwarded-proto") ?? "https"}://${fwdHost}`;
+  return new URL(req.url).origin;
+}
 
-/** Public, one-time: only works while no Super Admin exists. */
-export const createFirstSuperAdmin = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => z.object({ email: emailSchema, password: passwordSchema }).parse(d))
+async function checkAccess(access: string) {
+  const { isValidStaffAccess } = await import("@/lib/staff-access.server");
+  if (!(await isValidStaffAccess(access))) {
+    await new Promise((r) => setTimeout(r, 800)); // slow down guessing
+    throw new Error("Incorrect access password.");
+  }
+}
+
+type StaffRequest = { role: Role; status: "pending" | "approved"; requested_at: string };
+const BAN_FOREVER = "876000h";
+
+/* ───────────── Staff sign-up (password-protected, approved by the owner) ───────────── */
+
+/** Public: checks the access password that unlocks the staff sign-up screen. */
+export const checkStaffAccess = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ access: z.string().max(200) }).parse(d))
   .handler(async ({ data }) => {
-    const admin = await getAdmin();
-    const { count } = await admin.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "super_admin");
-    if ((count ?? 0) > 0) throw new Error("Setup is already complete. Please sign in.");
-    const { data: created, error } = await admin.auth.admin.createUser({ email: data.email, password: data.password, email_confirm: true });
-    if (error || !created.user) throw new Error(error?.message ?? "Could not create the account.");
-    const { error: rErr } = await admin.from("user_roles").insert({ user_id: created.user.id, role: "super_admin" });
-    if (rErr) throw new Error("Account created but role assignment failed.");
-    await log(created.user.id, data.email, "admin.setup", created.user.id, { role: "super_admin" });
+    await checkAccess(data.access);
     return { ok: true };
   });
+
+/**
+ * Public, needs the access password. The owner email gets a confirmation email and becomes the owner Super Admin once confirmed.
+ * Anyone else gets a locked account that the owner must approve; the owner is emailed a sign-in link to review it.
+ */
+export const requestStaffSignup = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ access: z.string().max(200), email: emailSchema, password: passwordSchema, role: roleSchema }).parse(d))
+  .handler(async ({ data }) => {
+    await checkAccess(data.access);
+    const origin = await requestOrigin();
+    const { publicClient } = await import("@/lib/supabase-public.server");
+
+    if (isOwnerEmail(data.email)) {
+      const { data: res, error } = await publicClient().auth.signUp({ email: data.email, password: data.password, options: { emailRedirectTo: `${origin}/admin/login` } });
+      if (error) throw new Error(error.message);
+      // Supabase hides existing accounts by returning a user with no identities.
+      if (!res.user || (res.user.identities?.length ?? 0) === 0) throw new Error("The owner account already exists. Sign in on the staff sign-in page.");
+      return { kind: "owner_confirm" as const };
+    }
+
+    const admin = await getAdmin();
+    const request: StaffRequest = { role: data.role, status: "pending", requested_at: new Date().toISOString() };
+    const { data: created, error } = await admin.auth.admin.createUser({
+      email: data.email, password: data.password, email_confirm: true, ban_duration: BAN_FOREVER,
+      app_metadata: { staff_request: request },
+    });
+    if (error || !created.user) throw new Error(error?.message?.toLowerCase().includes("already") ? "An account with this email already exists." : (error?.message ?? "Could not create the account."));
+    await log(created.user.id, data.email, "staff.signup_requested", created.user.id, { email: data.email, role: data.role });
+
+    // Email the owner a sign-in link that opens the approvals list. Requests also show on the Staff page, so a failed email is not fatal.
+    let notified = true;
+    const { error: mailErr } = await publicClient().auth.signInWithOtp({
+      email: OWNER_EMAIL,
+      options: { shouldCreateUser: false, emailRedirectTo: `${origin}/admin/login?redirect=${encodeURIComponent("/admin/admins")}` },
+    });
+    if (mailErr) notified = false;
+    return { kind: "pending" as const, notified };
+  });
+
+/** Signed-in owner: makes sure the owner account holds the Super Admin role (run after sign-in). */
+export const claimOwnerRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    if (!(await isOwnerUser(context.userId))) return { owner: false };
+    const admin = await getAdmin();
+    if (!(await rolesOf(context.userId)).includes("super_admin")) {
+      await admin.from("user_roles").insert({ user_id: context.userId, role: "super_admin" });
+      await log(context.userId, OWNER_EMAIL, "owner.claimed", context.userId, { role: "super_admin" });
+    }
+    return { owner: true };
+  });
+
+/** Owner: staff sign-ups waiting for approval. */
+export const listStaffRequests = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertOwner(context);
+    const admin = await getAdmin();
+    const out: { id: string; email: string; role: Role; requestedAt: string }[] = [];
+    for (let page = 1; page <= 20; page++) {
+      const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) throw new Error("Could not load sign-up requests.");
+      for (const u of data.users) {
+        const r = (u.app_metadata as { staff_request?: StaffRequest })?.staff_request;
+        if (r?.status === "pending") out.push({ id: u.id, email: u.email ?? "(unknown)", role: r.role, requestedAt: r.requested_at });
+      }
+      if (data.users.length < 1000) break;
+    }
+    return out.sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
+  });
+
+/** Owner: approve (unlock + give the requested role) or reject (delete the account) a staff sign-up. */
+export const decideStaffRequest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid(), approve: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context);
+    const admin = await getAdmin();
+    const { data: found } = await admin.auth.admin.getUserById(data.userId);
+    const u = found.user;
+    const req = (u?.app_metadata as { staff_request?: StaffRequest })?.staff_request;
+    if (!u || req?.status !== "pending") throw new Error("This request is no longer pending.");
+    if (!data.approve) {
+      const { error } = await admin.auth.admin.deleteUser(u.id);
+      if (error) throw new Error("Could not reject the request.");
+      await log(context.userId, actorEmail(context.claims), "staff.signup_rejected", u.id, { email: u.email, role: req.role });
+      return { ok: true };
+    }
+    const { error: rErr } = await admin.from("user_roles").upsert({ user_id: u.id, role: req.role }, { onConflict: "user_id,role", ignoreDuplicates: true });
+    if (rErr) throw new Error("Could not assign the role.");
+    const { error } = await admin.auth.admin.updateUserById(u.id, { ban_duration: "none", app_metadata: { ...u.app_metadata, staff_request: { ...req, status: "approved" } } });
+    if (error) throw new Error("Role given, but the account could not be unlocked.");
+    await log(context.userId, actorEmail(context.claims), "staff.signup_approved", u.id, { email: u.email, role: req.role });
+    return { ok: true };
+  });
+
+/* ───────────── Managing existing staff ───────────── */
 
 export const listAdmins = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -58,16 +187,20 @@ export const listAdmins = createServerFn({ method: "GET" })
       const { data } = await admin.auth.admin.getUserById(id);
       const u = data.user;
       const banned = !!u?.banned_until && new Date(u.banned_until) > new Date();
-      return { id, email: u?.email ?? "(unknown)", roles: rs, active: !banned, lastSignIn: u?.last_sign_in_at ?? null, isSelf: id === context.userId };
+      const isOwner = !!u?.email_confirmed_at && isOwnerEmail(u?.email);
+      return { id, email: u?.email ?? "(unknown)", roles: rs, active: !banned, lastSignIn: u?.last_sign_in_at ?? null, isSelf: id === context.userId, isOwner };
     }));
-    return out.sort((a, b) => a.email.localeCompare(b.email));
+    return out.sort((a, b) => Number(b.isOwner) - Number(a.isOwner) || a.email.localeCompare(b.email));
   });
 
+/** Super Admins can create Admins; only the owner can create Super Admins. */
 export const createAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ email: emailSchema, password: passwordSchema, role: roleSchema }).parse(d))
   .handler(async ({ data, context }) => {
     await assertSuper(context);
+    if (data.role === "super_admin") await assertOwner(context);
+    if (isOwnerEmail(data.email)) throw new Error("The owner account is set up from the staff sign-up page.");
     const admin = await getAdmin();
     const { data: created, error } = await admin.auth.admin.createUser({ email: data.email, password: data.password, email_confirm: true });
     if (error || !created.user) throw new Error(error?.message?.includes("already") ? "An account with this email already exists." : (error?.message ?? "Could not create the account."));
@@ -82,7 +215,8 @@ export const setAdminRole = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ userId: z.string().uuid(), role: roleSchema, grant: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertSuper(context);
-    if (!data.grant && data.userId === context.userId && data.role === "super_admin") throw new Error("You cannot remove your own Super Admin role.");
+    await assertCanManage(context, data.userId);
+    if (data.role === "super_admin") await assertOwner(context);
     const admin = await getAdmin();
     const { error } = data.grant
       ? await admin.from("user_roles").upsert({ user_id: data.userId, role: data.role }, { onConflict: "user_id,role", ignoreDuplicates: true })
@@ -92,14 +226,29 @@ export const setAdminRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/** Takes away all staff access. Admins: any Super Admin. Super Admins: owner only. The owner can never be removed. */
+export const removeStaff = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertSuper(context);
+    await assertCanManage(context, data.userId);
+    const admin = await getAdmin();
+    const { error } = await admin.from("user_roles").delete().eq("user_id", data.userId);
+    if (error) throw new Error("Could not remove this staff member.");
+    await admin.from("staff_permissions").delete().eq("user_id", data.userId);
+    await log(context.userId, actorEmail(context.claims), "admin.removed", data.userId, {});
+    return { ok: true };
+  });
+
 export const setAdminActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ userId: z.string().uuid(), active: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertSuper(context);
-    if (data.userId === context.userId) throw new Error("You cannot deactivate your own account.");
+    await assertCanManage(context, data.userId);
     const admin = await getAdmin();
-    const { error } = await admin.auth.admin.updateUserById(data.userId, { ban_duration: data.active ? "none" : "876000h" });
+    const { error } = await admin.auth.admin.updateUserById(data.userId, { ban_duration: data.active ? "none" : BAN_FOREVER });
     if (error) throw new Error("Could not update the account.");
     await log(context.userId, actorEmail(context.claims), data.active ? "admin.reactivated" : "admin.deactivated", data.userId, {});
     return { ok: true };

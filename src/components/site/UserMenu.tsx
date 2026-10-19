@@ -50,7 +50,7 @@ function RoleBadge({ type }: { type: AccountType | null }) {
       </span>
     );
   }
-  const Icon = type === "super_admin" ? Crown : ShieldCheck;
+  const Icon = type === "admin" ? ShieldCheck : Crown;
   return (
     <span className="inline-flex items-center gap-1 rounded-sm border border-champagne/50 bg-champagne/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-champagne">
       <Icon className="h-3 w-3" /> {accountTypeLabel[type]}
