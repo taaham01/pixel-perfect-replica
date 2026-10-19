@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/hooks/use-customer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { btn } from "./primitives";
@@ -39,13 +40,30 @@ export function SettingsDialog({ open, onOpenChange, staff }: {
     if (password !== String(fd.get("confirm") ?? "")) return setError("The two passwords don't match.");
     setLoading(true);
     setError(null);
+    const timeout = <T,>(ms: number, msg: string) => new Promise<T>((_, reject) => setTimeout(() => reject(new Error(msg)), ms));
     try {
-      // Set the password on the server. The browser-side supabase.auth.updateUser call can hang
-      // indefinitely (auth lock / refresh), which left this button stuck on "loading".
-      await Promise.race([
-        changeOwnPassword({ data: { password } }),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("The request timed out. Please try again.")), 20000)),
-      ]);
+      // Try the browser-side update first, but never wait on it forever (it can hang on the auth lock).
+      let browserError: string | null = null;
+      try {
+        const res = await Promise.race([
+          supabase.auth.updateUser({ password }),
+          timeout<never>(8000, "browser update timed out"),
+        ]);
+        browserError = res.error ? res.error.message : null;
+      } catch (err) {
+        browserError = err instanceof Error ? err.message : "failed";
+      }
+      if (browserError) {
+        const m = browserError.toLowerCase();
+        if (m.includes("same") || m.includes("different") || m.includes("weak") || m.includes("pwned") || m.includes("known")) {
+          throw new Error(browserError);
+        }
+        // Refused or stalled in the browser (e.g. needs a recent sign-in): set it directly on the server.
+        await Promise.race([
+          changeOwnPassword({ data: { password } }),
+          timeout<never>(20000, "The request timed out. Please try again."),
+        ]);
+      }
     } catch (err) {
       const raw = err instanceof Error ? err.message : "";
       const m = raw.toLowerCase();
