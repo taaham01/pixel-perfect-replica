@@ -59,10 +59,15 @@ export function SettingsDialog({ open, onOpenChange, staff }: {
           throw new Error(browserError);
         }
         // Refused or stalled in the browser (e.g. needs a recent sign-in): set it directly on the server.
-        await Promise.race([
-          changeOwnPassword({ data: { password } }),
-          timeout<never>(20000, "The request timed out. Please try again."),
-        ]);
+        try {
+          await Promise.race([
+            changeOwnPassword({ data: { password } }),
+            timeout<never>(20000, "The request timed out. Please try again."),
+          ]);
+        } catch (err) {
+          const serverMsg = err instanceof Error ? err.message : "failed";
+          throw new Error(`${browserError} (server fallback: ${serverMsg})`);
+        }
       }
     } catch (err) {
       const raw = err instanceof Error ? err.message : "";
