@@ -60,7 +60,7 @@ function Signup() {
       <AuthShell eyebrow="Almost there" title="Check your email" footer={<Link to="/login" search={{ redirect }} className="text-champagne hover:underline">Back to sign in</Link>}>
         <div className="flex gap-4">
           <MailCheck className="h-8 w-8 shrink-0 text-crimson" strokeWidth={1.5} />
-          <p className="text-sm leading-relaxed text-muted-foreground">We sent a confirmation link to <strong className="text-foreground">{checkEmail}</strong>. Open it to activate your account, then sign in.</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">We've sent a confirmation link to the email you entered, <strong className="text-foreground">{checkEmail}</strong>, if it exists. Open it to activate your account, then sign in.</p>
         </div>
       </AuthShell>
     );
