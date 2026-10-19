@@ -35,7 +35,9 @@ export function SettingsDialog({ open, onOpenChange, staff }: {
     e.preventDefault();
     const form = e.currentTarget;
     const fd = new FormData(form);
+    const currentPassword = String(fd.get("current") ?? "");
     const password = String(fd.get("password") ?? "");
+    if (!currentPassword) return setError("Enter your current password.");
     if (password.length < minLen) return setError(`Password must be at least ${minLen} characters.`);
     if (password !== String(fd.get("confirm") ?? "")) return setError("The two passwords don't match.");
     setLoading(true);
@@ -43,10 +45,16 @@ export function SettingsDialog({ open, onOpenChange, staff }: {
     const timeout = <T,>(ms: number, msg: string) => new Promise<T>((_, reject) => setTimeout(() => reject(new Error(msg)), ms));
     try {
       // Try the browser-side update first, but never wait on it forever (it can hang on the auth lock).
+      if (!email) throw new Error("Your account email is missing. Please sign in again.");
+      const verify = await Promise.race([
+        supabase.auth.signInWithPassword({ email, password: currentPassword }),
+        timeout<never>(15000, "The request timed out. Please try again."),
+      ]);
+      if (verify.error) throw new Error("Your current password is incorrect.");
       let browserError: string | null = null;
       try {
         const res = await Promise.race([
-          supabase.auth.updateUser({ password }),
+          supabase.auth.updateUser({ password, current_password: currentPassword } as Parameters<typeof supabase.auth.updateUser>[0]),
           timeout<never>(8000, "browser update timed out"),
         ]);
         browserError = res.error ? res.error.message : null;
@@ -100,6 +108,9 @@ export function SettingsDialog({ open, onOpenChange, staff }: {
 
         <form onSubmit={onSubmit} className="grid gap-4">
           <p className="flex items-center gap-2 text-sm font-semibold"><KeyRound className="h-4 w-4 text-crimson" /> Change password</p>
+          <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Current password</span>
+            <PasswordInput name="current" required maxLength={128} autoComplete="current-password" className={fieldCls} />
+          </label>
           <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">New password</span>
             <PasswordInput name="password" required minLength={minLen} maxLength={128} autoComplete="new-password" className={fieldCls} />
           </label>
