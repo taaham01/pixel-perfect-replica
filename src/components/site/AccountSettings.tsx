@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { useRouter } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell, Check, Clock, Copy, Download, Loader2, LogOut, Mail, MonitorSmartphone, ShieldCheck, Trash2, UserRound, type LucideIcon } from "lucide-react";
+import { Activity, ArrowRight, Bell, CalendarCheck, Car, Check, CircleDollarSign, Clock, Copy, Download, FileUp, LayoutDashboard, Loader2, LogOut, Mail, MonitorSmartphone, PlusCircle, ShieldCheck, Trash2, UserRound, Users, Wrench, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { countries, site } from "@/config/site";
@@ -23,10 +23,11 @@ import {
 import { cn } from "@/lib/utils";
 import { useCustomer } from "@/hooks/use-customer";
 
-export const SETTINGS_TABS = ["profile", "security", "preferences", "notifications", "privacy"] as const;
+export const SETTINGS_TABS = ["admin", "profile", "security", "preferences", "notifications", "privacy"] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
-const NAV: { id: SettingsTab; label: string; hint: string; icon: LucideIcon }[] = [
+const NAV: { id: SettingsTab; label: string; hint: string; icon: LucideIcon; staffOnly?: boolean }[] = [
+  { id: "admin", label: "Admin panel", hint: "Inventory, bookings, staff", icon: Wrench, staffOnly: true },
   { id: "profile", label: "Profile", hint: "Name, email, phone", icon: UserRound },
   { id: "security", label: "Security", hint: "Password & sessions", icon: ShieldCheck },
   { id: "preferences", label: "Preferences", hint: "Time zone & formats", icon: Clock },
@@ -59,7 +60,7 @@ export function AccountSettings({ userId, email, isStaff, tab, onTabChange, vari
     <div className={cn("grid gap-6", dialog ? "md:grid-cols-[13rem_minmax(0,1fr)] md:gap-0" : "gap-8 lg:grid-cols-12")}>
       <nav aria-label="Settings sections" className={cn(dialog ? "md:border-r md:border-border md:pr-4" : "lg:col-span-3")}>
         <ul className={cn("flex gap-2 overflow-x-auto pb-2", dialog ? "md:sticky md:top-0 md:flex-col md:gap-1 md:overflow-visible md:pb-0" : "lg:sticky lg:top-24 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0")}>
-          {NAV.map(({ id, label, hint, icon: Icon }) => (
+          {NAV.filter((n) => !n.staffOnly || isStaff).map(({ id, label, hint, icon: Icon }) => (
             <li key={id} className="shrink-0">
               <button
                 type="button"
@@ -76,6 +77,7 @@ export function AccountSettings({ userId, email, isStaff, tab, onTabChange, vari
         </ul>
       </nav>
       <div className={cn("grid min-w-0 content-start gap-6", dialog ? "md:pl-6" : "lg:col-span-9")}>
+        {tab === "admin" && (isStaff ? <AdminTab userId={userId} /> : <ProfileTab userId={userId} email={email} />)}
         {tab === "profile" && <ProfileTab userId={userId} email={email} />}
         {tab === "security" && <SecurityTab email={email} minLen={isStaff ? 10 : 8} />}
         {tab === "preferences" && <PreferencesTab />}
@@ -83,6 +85,71 @@ export function AccountSettings({ userId, email, isStaff, tab, onTabChange, vari
         {tab === "privacy" && <PrivacyTab userId={userId} email={email} isStaff={isStaff} />}
       </div>
     </div>
+  );
+}
+
+/* ───────────────────────── Admin panel (staff only) ───────────────────────── */
+
+type AdminPath = "/admin" | "/admin/vehicles" | "/admin/vehicles/new" | "/admin/sold" | "/admin/import" | "/admin/bookings" | "/admin/customers" | "/admin/admins" | "/admin/activity";
+type AdminLink = { to: AdminPath; label: string; hint: string; icon: LucideIcon; need?: "super" | "bookings" | "customers" };
+const ADMIN_LINKS: { group: string; links: AdminLink[] }[] = [
+  { group: "Overview", links: [{ to: "/admin", label: "Dashboard", hint: "Sales, stock and activity at a glance", icon: LayoutDashboard, need: "super" }] },
+  { group: "Inventory", links: [
+    { to: "/admin/vehicles", label: "Manage inventory", hint: "Edit, publish or remove vehicles", icon: Car },
+    { to: "/admin/vehicles/new", label: "Add a vehicle", hint: "List a new car with photos", icon: PlusCircle },
+    { to: "/admin/sold", label: "Sold vehicles", hint: "Cars marked as sold", icon: CircleDollarSign },
+    { to: "/admin/import", label: "CSV import", hint: "Add many vehicles from a spreadsheet", icon: FileUp },
+  ] },
+  { group: "Customers", links: [
+    { to: "/admin/bookings", label: "Bookings", hint: "Reservation requests from customers", icon: CalendarCheck, need: "bookings" },
+    { to: "/admin/customers", label: "Customers", hint: "Accounts and contact details", icon: UserRound, need: "customers" },
+  ] },
+  { group: "Team", links: [
+    { to: "/admin/admins", label: "Manage staff", hint: "Approve sign-ups, add or remove admins", icon: Users, need: "super" },
+    { to: "/admin/activity", label: "Activity log", hint: "Who changed what, and when", icon: Activity, need: "super" },
+  ] },
+];
+
+function AdminTab({ userId }: { userId: string }) {
+  const { data: access, isLoading } = useQuery({
+    queryKey: ["admin-access", userId],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const [{ data: roles }, { data: p }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+        supabase.from("staff_permissions").select("*").eq("user_id", userId).maybeSingle(),
+      ]);
+      const isSuper = (roles ?? []).some((r) => r.role === "super_admin");
+      return { super: isSuper, bookings: isSuper || !!p?.can_manage_bookings, customers: isSuper || !!p?.can_view_customers };
+    },
+  });
+
+  if (isLoading || !access) return <div className="grid h-40 place-items-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>;
+
+  return (
+    <Card title="Admin panel" description="Jump straight to any part of the website's admin area.">
+      <div className="grid gap-6">
+        <Link to="/admin" className={cn(btn({ variant: "primary" }), "w-full sm:w-auto sm:justify-self-start")}><Wrench className="h-4 w-4" /> Open admin panel <ArrowRight className="h-4 w-4" /></Link>
+        {ADMIN_LINKS.map(({ group, links }) => {
+          const allowed = links.filter((l) => !l.need || access[l.need]);
+          if (!allowed.length) return null;
+          return (
+            <div key={group}>
+              <p className="eyebrow mb-2 text-muted-foreground">{group}</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {allowed.map(({ to, label, hint, icon: Icon }) => (
+                  <Link key={to} to={to} className="group flex items-start gap-3 rounded-sm border border-border p-3 transition-colors hover:border-crimson/40 hover:bg-crimson/5">
+                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-crimson" />
+                    <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{label}</span><span className="block text-xs text-muted-foreground">{hint}</span></span>
+                    <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-crimson" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
