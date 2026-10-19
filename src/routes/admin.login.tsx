@@ -40,7 +40,15 @@ function Login() {
   async function enter() {
     if (entering.current) return;
     entering.current = true;
-    try { await claimOwnerRole(); } catch { /* not fatal: the dashboard still checks roles */ }
+    try {
+      await claimOwnerRole();
+    } catch (err) {
+      // Most often the server is missing SUPABASE_SERVICE_ROLE_KEY; show it rather than silently landing on the customer page.
+      entering.current = false;
+      setLoading(false);
+      setError(`Signed in, but staff access could not be checked: ${err instanceof Error ? err.message : "server error"}`);
+      return;
+    }
     navigate({ to: redirect ?? "/admin", replace: true });
   }
 
