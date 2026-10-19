@@ -136,9 +136,34 @@
   animation: dash 3.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+/* Silver member badge: brushed-metal gradient with a light sweep across it. */
+@keyframes silver-shine {
+  0%, 55% { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(320%) skewX(-20deg); }
+}
+.badge-silver {
+  position: relative;
+  overflow: hidden;
+  color: #1d1f24;
+  background: linear-gradient(135deg, #8e939b 0%, #e9ecef 22%, #b9bec5 42%, #f8f9fa 58%, #a3a8b0 78%, #dfe2e6 100%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 rgba(0, 0, 0, 0.18), 0 0 10px rgba(220, 225, 232, 0.25);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.badge-silver::after {
+  content: "";
+  position: absolute;
+  inset: -2px auto -2px 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+  animation: silver-shine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
 .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.8s cubic-bezier(0.2,0.7,0.2,1), transform 0.8s cubic-bezier(0.2,0.7,0.2,1); }
 .reveal.is-visible { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; }
   .animate-fade-up, .route-line { animation: none; stroke-dashoffset: 0; }
+  .badge-silver::after { animation: none; display: none; }
 }
