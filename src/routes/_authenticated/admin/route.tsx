@@ -5,7 +5,6 @@ import { Activity, Car, CircleDollarSign, FileUp, CalendarCheck, LayoutDashboard
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { Logo } from "@/components/site/Logo";
-import { SettingsDialog } from "@/components/site/SettingsDialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -25,7 +24,6 @@ function AdminLayout() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const links = [
     ...(admin.isSuper ? [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }] : []),
     { to: "/admin/vehicles", label: "Inventory", icon: Car, exact: true },
@@ -55,7 +53,7 @@ function AdminLayout() {
       <div className="mt-auto border-t border-ink-line pt-3">
         <p className="truncate px-3 text-xs text-ink-muted">{admin.email}</p>
         <p className="px-3 text-[0.65rem] uppercase tracking-wider text-champagne">{admin.isSuper ? "Super Admin" : "Inventory Manager"}</p>
-        <button onClick={() => { setOpen(false); setSettingsOpen(true); }} className="mt-2 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-ink-muted hover:bg-ink-soft hover:text-ink-foreground"><Settings className="h-4 w-4" /> Settings</button>
+        <Link to="/settings" search={{ tab: "profile" }} onClick={() => setOpen(false)} className="mt-2 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-ink-muted hover:bg-ink-soft hover:text-ink-foreground"><Settings className="h-4 w-4" /> Settings</Link>
         <button onClick={signOut} className="flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-ink-muted hover:bg-ink-soft hover:text-ink-foreground"><LogOut className="h-4 w-4" /> Sign out</button>
       </div>
     </nav>
@@ -75,7 +73,6 @@ function AdminLayout() {
       <main className="px-4 py-6 md:px-8 md:py-10 lg:ml-64">
         <Outlet />
       </main>
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} staff={{ email: admin.email ?? null, roleLabel: admin.isSuper ? "Super Admin" : "Inventory Manager" }} />
     </div>
   );
 }
