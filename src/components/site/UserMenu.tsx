@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronDown, Copy, LogOut, Settings, UserRound } from "lucide-react";
+import { Check, ChevronDown, Copy, Crown, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useCustomer } from "@/hooks/use-customer";
+import { accountTypeLabel, useCustomer, type AccountType } from "@/hooks/use-customer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { btn } from "./primitives";
 import { SettingsDialog } from "./SettingsDialog";
@@ -40,9 +40,20 @@ function CopyId({ value }: { value: string }) {
   );
 }
 
+/** Badge showing who is signed in: Super Admin, Admin or Customer. */
+function RoleBadge({ type }: { type: AccountType | null }) {
+  if (!type) return null;
+  const Icon = type === "super_admin" ? Crown : type === "admin" ? ShieldCheck : UserRound;
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${type === "customer" ? "border-ink-foreground/20 text-ink-muted" : "border-champagne/50 bg-champagne/10 text-champagne"}`}>
+      <Icon className="h-3 w-3" /> {accountTypeLabel[type]}
+    </span>
+  );
+}
+
 /** Navbar account area: Sign In when signed out; name, customer ID, settings and log out when signed in. */
 export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile" }) {
-  const { user, ready, profile, email, displayName } = useCustomer();
+  const { user, ready, profile, email, displayName, accountType } = useCustomer();
   const signOut = useSignOut();
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -62,7 +73,7 @@ export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile"
     return (
       <div className="border-b border-ink-line py-4">
         <p className="text-xs uppercase tracking-wider text-ink-muted">Signed in as</p>
-        <p className="mt-1 text-lg font-semibold text-ink-foreground">{displayName}</p>
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-lg font-semibold text-ink-foreground">{displayName} <RoleBadge type={accountType} /></p>
         {profile && <p className="mt-0.5 font-mono text-xs text-champagne">{profile.customerNumber}</p>}
         <div className="mt-4 flex gap-5 text-sm font-medium text-ink-foreground">
           <button onClick={() => setSettingsOpen(true)} className="inline-flex items-center gap-2"><Settings className="h-4 w-4" /> Settings</button>
@@ -91,6 +102,7 @@ export function UserMenu({ layout = "desktop" }: { layout?: "desktop" | "mobile"
           <p className="text-xs uppercase tracking-wider text-ink-muted">Signed in as</p>
           <p className="truncate text-sm font-semibold text-ink-foreground">{displayName}</p>
           <p className="truncate text-xs text-ink-muted">{email}</p>
+          <div className="pt-0.5"><RoleBadge type={accountType} /></div>
           {profile && <CopyId value={profile.customerNumber} />}
         </DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-ink-line" />

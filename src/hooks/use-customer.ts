@@ -3,6 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+export type AccountType = "super_admin" | "admin" | "customer";
+export const accountTypeLabel: Record<AccountType, string> = { super_admin: "Super Admin", admin: "Admin", customer: "Customer" };
+
 export type CustomerSummary = { customerNumber: string; fullName: string; country: string } | null;
 
 /** The signed-in user (if any) plus their customer profile, kept in step with sign in / sign out. */
@@ -39,10 +42,24 @@ export function useCustomer() {
     },
   });
 
+  const { data: roles } = useQuery({
+    queryKey: ["user-roles", user?.id],
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+    retry: false,
+    queryFn: async (): Promise<string[]> => {
+      if (!user) return [];
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      return (data ?? []).map((r) => r.role as string);
+    },
+  });
+  // Who is signed in: Super Admin, Admin (any other staff role) or Customer.
+  const accountType: AccountType | null = !roles ? null : roles.includes("super_admin") ? "super_admin" : roles.length > 0 ? "admin" : "customer";
+
   const email = user?.email ?? "";
   // Name shown in the navbar: the saved profile name, else the name typed at signup, else the email's username.
   const rawMeta: unknown = user?.user_metadata?.["full_name"];
   const signupName = typeof rawMeta === "string" ? rawMeta.trim() : "";
   const displayName = profile?.fullName || (signupName || (email ? email.split("@")[0] ?? email : ""));
-  return { user, ready, profile: profile ?? null, email, displayName };
+  return { user, ready, profile: profile ?? null, email, displayName, accountType };
 }
