@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { OWNER_EMAIL, isOwnerEmail } from "@/config/staff";
+import { OWNER_EMAIL, isOwnerEmail, isPrimaryOwnerEmail } from "@/config/staff";
 
 type Role = "super_admin" | "inventory_manager";
 const roleSchema = z.enum(["super_admin", "inventory_manager"]);
@@ -18,15 +18,24 @@ async function assertSuper(ctx: { supabase: any; userId: string }) {
   if (error || !data) throw new Error("Only a Super Admin can do this.");
 }
 
-/** True when this account is the website owner: the owner email, confirmed. */
-async function isOwnerUser(userId: string) {
+type OwnerLevel = "primary" | "co" | null;
+
+/** "primary" for taaham01@gmail.com, "co" for a second owner, null otherwise. The email must be confirmed. */
+async function ownerLevel(userId: string): Promise<OwnerLevel> {
   const admin = await getAdmin();
   const { data } = await admin.auth.admin.getUserById(userId);
-  return !!data.user?.email_confirmed_at && isOwnerEmail(data.user.email);
+  const u = data.user;
+  if (!u?.email_confirmed_at) return null;
+  return isPrimaryOwnerEmail(u.email) ? "primary" : isOwnerEmail(u.email) ? "co" : null;
 }
 
+async function isOwnerUser(userId: string) {
+  return (await ownerLevel(userId)) !== null;
+}
+
+/** Any owner (primary or second). */
 async function assertOwner(ctx: { userId: string }) {
-  if (!(await isOwnerUser(ctx.userId))) throw new Error("Only the owner account can do this.");
+  if (!(await isOwnerUser(ctx.userId))) throw new Error("Only an owner account can do this.");
 }
 
 async function rolesOf(userId: string): Promise<Role[]> {
@@ -35,10 +44,15 @@ async function rolesOf(userId: string): Promise<Role[]> {
   return (data ?? []).map((r) => r.role as Role);
 }
 
-/** Rules for changing someone else's staff account: never the owner; Super Admins only by the owner. */
+/**
+ * Rules for changing someone else's account: the primary owner can never be touched; a second owner only by the primary owner;
+ * Super Admins only by an owner.
+ */
 async function assertCanManage(ctx: { userId: string }, targetId: string) {
-  if (targetId === ctx.userId) throw new Error("You cannot change your own staff access.");
-  if (await isOwnerUser(targetId)) throw new Error("The owner account cannot be changed.");
+  if (targetId === ctx.userId) throw new Error("You cannot change your own access here.");
+  const target = await ownerLevel(targetId);
+  if (target === "primary") throw new Error("The main owner account cannot be changed.");
+  if (target === "co" && (await ownerLevel(ctx.userId)) !== "primary") throw new Error("Only the main owner can change another owner.");
   if ((await rolesOf(targetId)).includes("super_admin")) await assertOwner(ctx);
 }
 
@@ -124,7 +138,7 @@ export const claimOwnerRole = createServerFn({ method: "POST" })
     const admin = await getAdmin();
     if (!(await rolesOf(context.userId)).includes("super_admin")) {
       await admin.from("user_roles").insert({ user_id: context.userId, role: "super_admin" });
-      await log(context.userId, OWNER_EMAIL, "owner.claimed", context.userId, { role: "super_admin" });
+      await log(context.userId, actorEmail(context.claims), "owner.claimed", context.userId, { role: "super_admin" });
     }
     return { owner: true };
   });
@@ -188,9 +202,10 @@ export const listAdmins = createServerFn({ method: "GET" })
       const u = data.user;
       const banned = !!u?.banned_until && new Date(u.banned_until) > new Date();
       const isOwner = !!u?.email_confirmed_at && isOwnerEmail(u?.email);
-      return { id, email: u?.email ?? "(unknown)", roles: rs, active: !banned, lastSignIn: u?.last_sign_in_at ?? null, isSelf: id === context.userId, isOwner };
+      const isPrimaryOwner = isOwner && isPrimaryOwnerEmail(u?.email);
+      return { id, email: u?.email ?? "(unknown)", roles: rs, active: !banned, lastSignIn: u?.last_sign_in_at ?? null, isSelf: id === context.userId, isOwner, isPrimaryOwner };
     }));
-    return out.sort((a, b) => Number(b.isOwner) - Number(a.isOwner) || a.email.localeCompare(b.email));
+    return out.sort((a, b) => Number(b.isPrimaryOwner) - Number(a.isPrimaryOwner) || Number(b.isOwner) - Number(a.isOwner) || a.email.localeCompare(b.email));
   });
 
 /** Super Admins can create Admins; only the owner can create Super Admins. */
@@ -251,6 +266,22 @@ export const setAdminActive = createServerFn({ method: "POST" })
     const { error } = await admin.auth.admin.updateUserById(data.userId, { ban_duration: data.active ? "none" : BAN_FOREVER });
     if (error) throw new Error("Could not update the account.");
     await log(context.userId, actorEmail(context.claims), data.active ? "admin.reactivated" : "admin.deactivated", data.userId, {});
+    return { ok: true };
+  });
+
+/** Owners only: permanently delete any account (staff or customer) and its bookings. The main owner can never be deleted. */
+export const deleteAccount = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context);
+    await assertCanManage(context, data.userId);
+    const admin = await getAdmin();
+    const { data: found } = await admin.auth.admin.getUserById(data.userId);
+    await admin.from("bookings").delete().eq("user_id", data.userId);
+    const { error } = await admin.auth.admin.deleteUser(data.userId);
+    if (error) throw new Error("Could not delete the account.");
+    await log(context.userId, actorEmail(context.claims), "account.deleted", data.userId, { email: found.user?.email ?? null });
     return { ok: true };
   });
 

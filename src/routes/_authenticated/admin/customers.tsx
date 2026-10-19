@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { listCustomers, updateCustomer } from "@/lib/admin.functions";
+import { deleteAccount, listCustomers, updateCustomer } from "@/lib/admin.functions";
 import { useAdmin } from "@/hooks/use-admin";
 import { btn } from "@/components/site/primitives";
 
@@ -18,6 +18,12 @@ function Customers() {
 
   async function update(userId: string, patch: { active?: boolean; phoneVerified?: boolean }) {
     try { await updateCustomer({ data: { userId, ...patch } }); toast.success("Customer updated"); qc.invalidateQueries({ queryKey: ["admin", "customers"] }); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+  }
+
+  async function remove(userId: string, email: string) {
+    if (!window.confirm(`Permanently delete the account ${email} and their bookings? This cannot be undone.`)) return;
+    try { await deleteAccount({ data: { userId } }); toast.success("Account deleted"); qc.invalidateQueries({ queryKey: ["admin", "customers"] }); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
   }
 
@@ -43,6 +49,7 @@ function Customers() {
                   <td className="flex flex-wrap gap-2 p-3">
                     <button onClick={() => update(c.id, { active: !c.active })} className={btn({ variant: "outline", size: "sm" })}>{c.active ? "Suspend" : "Reactivate"}</button>
                     {!c.phone_verified && c.phone && <button onClick={() => update(c.id, { phoneVerified: true })} className={btn({ variant: "outline", size: "sm" })}>Mark phone verified</button>}
+                    {admin.isOwner && <button onClick={() => remove(c.id, c.email)} className={btn({ variant: "outline", size: "sm" })}>Delete account</button>}
                   </td>
                 )}
               </tr>

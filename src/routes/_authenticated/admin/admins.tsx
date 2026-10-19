@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Crown, ShieldCheck, UserMinus, X } from "lucide-react";
+import { Check, Crown, ShieldCheck, Trash2, UserMinus, X } from "lucide-react";
 import { toast } from "sonner";
-import { createAdmin, decideStaffRequest, listAdmins, listStaffPermissions, listStaffRequests, removeStaff, setAdminActive, setAdminRole, setStaffPermissions } from "@/lib/admin.functions";
+import { createAdmin, decideStaffRequest, deleteAccount, listAdmins, listStaffPermissions, listStaffRequests, removeStaff, setAdminActive, setAdminRole, setStaffPermissions } from "@/lib/admin.functions";
 import { useAdmin } from "@/hooks/use-admin";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
@@ -45,7 +45,9 @@ function Admins() {
       <div>
         <h1 className="text-2xl font-bold">Manage staff</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {me.isOwner ? "You're the owner: you approve new staff and you're the only one who can add or remove Super Admins." : "Super Admins can add and remove Admins. Only the owner can add or remove Super Admins."}
+          {me.isPrimaryOwner ? "You're the main owner: you have full control over every account, including the other owner."
+            : me.isOwner ? "You're an owner: you approve new staff, manage Super Admins and Admins, and can delete any account except the main owner's."
+            : "Super Admins can add and remove Admins. Only the owners can add or remove Super Admins."}
         </p>
       </div>
 
@@ -92,8 +94,8 @@ function Admins() {
           <tbody>
             {staff.data?.map((s) => {
               const isSuper = s.roles.includes("super_admin");
-              // Owner can manage everyone but themselves; other Super Admins can manage Admins only.
-              const canManage = !s.isSelf && !s.isOwner && (me.isOwner || !isSuper);
+              // Main owner: everyone but themselves. Second owner: everyone except owners. Other Super Admins: Admins only.
+              const canManage = !s.isSelf && !s.isPrimaryOwner && (s.isOwner ? me.isPrimaryOwner : me.isOwner || !isSuper);
               const p = perms.data?.find((x) => x.user_id === s.id);
               const cur = { can_publish: !!p?.can_publish, can_manage_bookings: !!p?.can_manage_bookings, can_view_customers: !!p?.can_view_customers };
               return (
@@ -101,7 +103,7 @@ function Admins() {
                   <td className="p-3">{s.email}{s.isSelf && <span className="ml-1 text-xs text-muted-foreground">(you)</span>}</td>
                   <td className="p-3">
                     {s.isOwner ? <span className="inline-flex items-center gap-1 font-semibold"><Crown className="h-3.5 w-3.5 text-champagne" /> Owner</span> : isSuper ? "Super Admin" : "Admin"}
-                    {canManage && me.isOwner && (
+                    {canManage && me.isOwner && !s.isOwner && (
                       <button className="mt-1 block text-xs text-crimson hover:underline"
                         onClick={() => run(async () => {
                           await setAdminRole({ data: { userId: s.id, role: isSuper ? "inventory_manager" : "super_admin", grant: true } });
@@ -114,6 +116,12 @@ function Admins() {
                       <button className="mt-1 flex items-center gap-1 text-xs text-crimson hover:underline"
                         onClick={() => { if (window.confirm(`Remove ${s.email} from staff? They will lose all admin access.`)) void run(() => removeStaff({ data: { userId: s.id } }), "Removed from staff"); }}>
                         <UserMinus className="h-3 w-3" /> Remove from staff
+                      </button>
+                    )}
+                    {canManage && me.isOwner && (
+                      <button className="mt-1 flex items-center gap-1 text-xs text-crimson hover:underline"
+                        onClick={() => { if (window.confirm(`Permanently delete the account ${s.email}? This cannot be undone.`)) void run(() => deleteAccount({ data: { userId: s.id } }), "Account deleted"); }}>
+                        <Trash2 className="h-3 w-3" /> Delete account
                       </button>
                     )}
                   </td>
