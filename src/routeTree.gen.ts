@@ -25,6 +25,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SoldCarsRouteImport } from './routes/sold-cars'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AdminSetupRouteImport } from './routes/admin.setup'
@@ -120,6 +121,11 @@ const TermsRoute = TermsRouteImport.update({
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
@@ -234,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/account': typeof AuthenticatedAccountRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/sold-cars': typeof SoldCarsRoute
   '/terms': typeof TermsRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
@@ -303,6 +311,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/setup': typeof AdminSetupRoute
   '/vehicles/$slug': typeof VehiclesSlugRoute
@@ -339,6 +348,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin'
     | '/account'
+    | '/settings'
     | '/admin/login'
     | '/admin/setup'
     | '/vehicles/$slug'
@@ -372,6 +382,7 @@ export interface FileRouteTypes {
     | '/sold-cars'
     | '/terms'
     | '/account'
+    | '/settings'
     | '/admin/login'
     | '/admin/setup'
     | '/vehicles/$slug'
@@ -407,6 +418,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/admin'
     | '/_authenticated/account'
+    | '/_authenticated/settings'
     | '/admin/login'
     | '/admin/setup'
     | '/vehicles/$slug'
@@ -560,6 +572,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
@@ -722,11 +741,13 @@ const AuthenticatedAdminRouteRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
