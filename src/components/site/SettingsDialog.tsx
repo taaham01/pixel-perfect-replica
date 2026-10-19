@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { KeyRound, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/hooks/use-customer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { btn } from "./primitives";
@@ -40,23 +39,23 @@ export function SettingsDialog({ open, onOpenChange, staff }: {
     if (password !== String(fd.get("confirm") ?? "")) return setError("The two passwords don't match.");
     setLoading(true);
     setError(null);
-    let failure: string | null = null;
-    const first = await supabase.auth.updateUser({ password });
-    if (first.error) {
-      const m = first.error.message.toLowerCase();
-      if (m.includes("same") || m.includes("different")) failure = "Choose a password you haven't used before.";
-      else if (m.includes("weak") || m.includes("pwned") || m.includes("known")) failure = "That password is too easy to guess. Please choose a stronger one.";
-      else {
-        // The browser-side update was refused (for example it wants a recent sign-in), so set it directly on the server.
-        try {
-          await changeOwnPassword({ data: { password } });
-        } catch (err) {
-          failure = `We couldn't update your password: ${err instanceof Error ? err.message : first.error.message}`;
-        }
-      }
+    try {
+      // Set the password on the server. The browser-side supabase.auth.updateUser call can hang
+      // indefinitely (auth lock / refresh), which left this button stuck on "loading".
+      await Promise.race([
+        changeOwnPassword({ data: { password } }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error("The request timed out. Please try again.")), 20000)),
+      ]);
+    } catch (err) {
+      const raw = err instanceof Error ? err.message : "";
+      const m = raw.toLowerCase();
+      if (m.includes("same") || m.includes("different")) setError("Choose a password you haven't used before.");
+      else if (m.includes("weak") || m.includes("pwned") || m.includes("known")) setError("That password is too easy to guess. Please choose a stronger one.");
+      else setError(`We couldn't update your password${raw ? `: ${raw}` : "."}`);
+      return;
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    if (failure) return setError(failure);
     form.reset();
     toast.success("Password changed.");
     onOpenChange(false);
