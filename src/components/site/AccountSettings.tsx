@@ -46,21 +46,25 @@ function Card({ title, description, children, tone }: { title: string; descripti
 }
 
 /** All account settings (profile, security, preferences, notifications, privacy), shared by the /settings page and the Settings pop-up. */
-export function AccountSettings({ userId, email, isStaff, tab, onTabChange, variant = "page" }: {
+export function AccountSettings({ userId, email, isStaff, showAdmin = false, tab, onTabChange, variant = "page" }: {
   userId: string;
   email: string;
   isStaff: boolean;
+  /** Show the Admin panel section. Only true when Settings is opened from inside the admin area, never on the public site. */
+  showAdmin?: boolean;
   tab: SettingsTab;
   onTabChange: (tab: SettingsTab) => void;
   /** "dialog" uses a compact two-column layout sized for the pop-up window. */
   variant?: "page" | "dialog";
 }) {
   const dialog = variant === "dialog";
+  const adminVisible = isStaff && showAdmin;
+  if (tab === "admin" && !adminVisible) tab = "profile";
   return (
     <div className={cn("grid gap-6", dialog ? "md:grid-cols-[13rem_minmax(0,1fr)] md:gap-0" : "gap-8 lg:grid-cols-12")}>
       <nav aria-label="Settings sections" className={cn(dialog ? "md:border-r md:border-border md:pr-4" : "lg:col-span-3")}>
         <ul className={cn("flex gap-2 overflow-x-auto pb-2", dialog ? "md:sticky md:top-0 md:flex-col md:gap-1 md:overflow-visible md:pb-0" : "lg:sticky lg:top-24 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0")}>
-          {NAV.filter((n) => !n.staffOnly || isStaff).map(({ id, label, hint, icon: Icon }) => (
+          {NAV.filter((n) => !n.staffOnly || adminVisible).map(({ id, label, hint, icon: Icon }) => (
             <li key={id} className="shrink-0">
               <button
                 type="button"
@@ -77,7 +81,7 @@ export function AccountSettings({ userId, email, isStaff, tab, onTabChange, vari
         </ul>
       </nav>
       <div className={cn("grid min-w-0 content-start gap-6", dialog ? "md:pl-6" : "lg:col-span-9")}>
-        {tab === "admin" && (isStaff ? <AdminTab userId={userId} /> : <ProfileTab userId={userId} email={email} />)}
+        {tab === "admin" && <AdminTab userId={userId} />}
         {tab === "profile" && <ProfileTab userId={userId} email={email} />}
         {tab === "security" && <SecurityTab email={email} minLen={isStaff ? 10 : 8} />}
         {tab === "preferences" && <PreferencesTab />}

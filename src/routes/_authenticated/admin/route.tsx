@@ -54,7 +54,7 @@ function AdminLayout() {
       <div className="mt-auto border-t border-ink-line pt-3">
         <p className="truncate px-3 text-xs text-ink-muted">{admin.email}</p>
         <p className="px-3 text-[0.65rem] uppercase tracking-wider text-champagne">{admin.isSuper ? "Super Admin" : "Inventory Manager"}</p>
-        <Link to="/settings" search={{ tab: "profile" }} onClick={() => setOpen(false)} className="mt-2 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-ink-muted hover:bg-ink-soft hover:text-ink-foreground"><Settings className="h-4 w-4" /> Settings</Link>
+        <Link to="/settings" search={{ tab: "admin", from: "admin" }} onClick={() => setOpen(false)} className="mt-2 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-ink-muted hover:bg-ink-soft hover:text-ink-foreground"><Settings className="h-4 w-4" /> Settings</Link>
         <button onClick={signOut} className="flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-ink-muted hover:bg-ink-soft hover:text-ink-foreground"><LogOut className="h-4 w-4" /> Sign out</button>
       </div>
     </nav>
