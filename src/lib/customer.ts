@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { phoneCountryError } from "@/config/countries";
 
 /** Turns "+254 (700) 000-111" into "+254700000111"; numbers without a leading + are left as digits only. */
 export function normalizePhone(value: string): string {
@@ -13,16 +14,27 @@ export const phoneSchema = z
   .transform(normalizePhone)
   .pipe(z.string().regex(/^\+[1-9]\d{7,14}$/, "Enter your number with the country code, e.g. +254 700 000000"));
 
-export const detailsSchema = z.object({
+const detailsShape = {
   fullName: z.string().trim().min(1, "Enter your full name").max(120),
   country: z.string().trim().min(1, "Select your country").max(80),
   phone: phoneSchema,
-});
+};
 
-export const signupSchema = detailsSchema.extend({
-  email: z.string().trim().toLowerCase().email("Enter a valid email address").max(254),
-  password: z.string().min(8, "Password must be at least 8 characters").max(128),
-});
+/** The phone number must also fit the selected country (dialling code and length). */
+function checkPhoneMatchesCountry(v: { phone: string; country: string }, ctx: z.RefinementCtx) {
+  const msg = phoneCountryError(v.phone, v.country);
+  if (msg) ctx.addIssue({ code: z.ZodIssueCode.custom, message: msg, path: ["phone"] });
+}
+
+export const detailsSchema = z.object(detailsShape).superRefine(checkPhoneMatchesCountry);
+
+export const signupSchema = z
+  .object({
+    ...detailsShape,
+    email: z.string().trim().toLowerCase().email("Enter a valid email address").max(254),
+    password: z.string().min(8, "Password must be at least 8 characters").max(128),
+  })
+  .superRefine(checkPhoneMatchesCountry);
 
 /** Only follow redirects that stay on this site. */
 export function safeRedirect(value: unknown): string | undefined {

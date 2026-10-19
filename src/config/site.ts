@@ -53,9 +53,4 @@ export const navLinks = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
-export const countries = [
-  "Kenya", "Tanzania", "Uganda", "Zambia", "Mozambique", "Zimbabwe", "Malawi", "Nigeria", "Ghana",
-  "South Africa", "United Arab Emirates", "Saudi Arabia", "Oman", "Pakistan", "Bangladesh", "Sri Lanka",
-  "Jamaica", "Trinidad and Tobago", "Guyana", "Bahamas", "Australia", "New Zealand", "Fiji",
-  "Chile", "Mongolia", "Russia", "United Kingdom", "Ireland", "Other",
-];
+export { countryNames as countries } from "./countries";

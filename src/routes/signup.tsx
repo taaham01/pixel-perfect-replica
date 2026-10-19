@@ -3,6 +3,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Loader2, MailCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { countries, site } from "@/config/site";
+import { dialCodeFor } from "@/config/countries";
 import { AuthShell } from "@/components/site/AuthShell";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
@@ -24,6 +25,8 @@ function Signup() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [checkEmail, setCheckEmail] = useState<string | null>(null);
+  const [country, setCountry] = useState("");
+  const dial = dialCodeFor(country);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -74,12 +77,12 @@ function Signup() {
         <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Full name <span className="text-crimson">*</span></span><input name="fullName" required autoComplete="name" maxLength={120} className={fieldCls} /></label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Country <span className="text-crimson">*</span></span>
-            <select name="country" required defaultValue="" autoComplete="country-name" className={fieldCls}>
+            <select name="country" required value={country} onChange={(e) => setCountry(e.target.value)} autoComplete="country-name" className={fieldCls}>
               <option value="" disabled>Select…</option>
               {countries.map((c) => <option key={c}>{c}</option>)}
             </select>
           </label>
-          <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Phone / WhatsApp <span className="text-crimson">*</span></span><input name="phone" type="tel" required autoComplete="tel" placeholder="+254 700 000000" maxLength={30} className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">Include the country code. We'll text you a code to verify it before you can book.</span></label>
+          <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Phone / WhatsApp <span className="text-crimson">*</span></span><input name="phone" type="tel" required autoComplete="tel" placeholder={dial ? `${dial} …` : "+254 700 000000"} maxLength={30} className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">Include the country code{dial ? ` (${dial})` : ""}. We'll text you a code to verify it before you can book.</span></label>
         </div>
         <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Email <span className="text-crimson">*</span></span><input name="email" type="email" required autoComplete="email" maxLength={254} className={fieldCls} /></label>
         <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password <span className="text-crimson">*</span></span><PasswordInput name="password" required minLength={8} maxLength={128} autoComplete="new-password" className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">At least 8 characters.</span></label>
