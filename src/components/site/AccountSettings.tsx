@@ -114,7 +114,8 @@ const ADMIN_LINKS: { group: string; links: AdminLink[] }[] = [
   ] },
 ];
 
-function AdminTab({ userId }: { userId: string }) {
+/** Shortcuts to every admin area the staff member can use. Shown in the admin portal and in Settings opened from it. */
+export function AdminTab({ userId }: { userId: string }) {
   const { data: access, isLoading } = useQuery({
     queryKey: ["admin-access", userId],
     staleTime: 60_000,

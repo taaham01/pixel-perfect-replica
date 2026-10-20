@@ -39,6 +39,7 @@ import { Route as AuthenticatedAdminCustomersRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin/import'
 import { Route as AuthenticatedAdminInventoryRouteImport } from './routes/_authenticated/admin/inventory'
 import { Route as AuthenticatedAdminSoldRouteImport } from './routes/_authenticated/admin/sold'
+import { Route as AuthenticatedAdminManageRouteImport } from './routes/_authenticated/admin/manage'
 import { Route as AuthenticatedAdminVehiclesIndexRouteImport } from './routes/_authenticated/admin/vehicles.index'
 import { Route as AuthenticatedAdminVehiclesNewRouteImport } from './routes/_authenticated/admin/vehicles.new'
 import { Route as ApiPublicImagesSplatRouteImport } from './routes/api/public/images.$'
@@ -199,6 +200,11 @@ const AuthenticatedAdminSoldRoute = AuthenticatedAdminSoldRouteImport.update({
   path: '/sold',
   getParentRoute: () => AuthenticatedAdminRouteRoute,
 } as any)
+const AuthenticatedAdminManageRoute = AuthenticatedAdminManageRouteImport.update({
+  id: '/manage',
+  path: '/manage',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
 const AuthenticatedAdminVehiclesIndexRoute =
   AuthenticatedAdminVehiclesIndexRouteImport.update({
     id: '/vehicles/',
@@ -252,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/sold': typeof AuthenticatedAdminSoldRoute
+  '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/vehicles/new': typeof AuthenticatedAdminVehiclesNewRoute
   '/api/public/images/$': typeof ApiPublicImagesSplatRoute
@@ -286,6 +293,7 @@ export interface FileRoutesByTo {
   '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/admin/sold': typeof AuthenticatedAdminSoldRoute
+  '/admin/manage': typeof AuthenticatedAdminManageRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/vehicles/new': typeof AuthenticatedAdminVehiclesNewRoute
   '/api/public/images/$': typeof ApiPublicImagesSplatRoute
@@ -323,6 +331,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/import': typeof AuthenticatedAdminImportRoute
   '/_authenticated/admin/inventory': typeof AuthenticatedAdminInventoryRoute
   '/_authenticated/admin/sold': typeof AuthenticatedAdminSoldRoute
+  '/_authenticated/admin/manage': typeof AuthenticatedAdminManageRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/vehicles/new': typeof AuthenticatedAdminVehiclesNewRoute
   '/api/public/images/$': typeof ApiPublicImagesSplatRoute
@@ -360,6 +369,7 @@ export interface FileRouteTypes {
     | '/admin/import'
     | '/admin/inventory'
     | '/admin/sold'
+    | '/admin/manage'
     | '/admin/'
     | '/admin/vehicles/new'
     | '/api/public/images/$'
@@ -394,6 +404,7 @@ export interface FileRouteTypes {
     | '/admin/import'
     | '/admin/inventory'
     | '/admin/sold'
+    | '/admin/manage'
     | '/admin'
     | '/admin/vehicles/new'
     | '/api/public/images/$'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/import'
     | '/_authenticated/admin/inventory'
     | '/_authenticated/admin/sold'
+    | '/_authenticated/admin/manage'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/vehicles/new'
     | '/api/public/images/$'
@@ -672,6 +684,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSoldRouteImport
       parentRoute: typeof AuthenticatedAdminRouteRoute
     }
+    '/_authenticated/admin/manage': {
+      id: '/_authenticated/admin/manage'
+      path: '/manage'
+      fullPath: '/admin/manage'
+      preLoaderRoute: typeof AuthenticatedAdminManageRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/admin/vehicles/': {
       id: '/_authenticated/admin/vehicles/'
       path: '/vehicles'
@@ -711,6 +730,7 @@ interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRoute
   AuthenticatedAdminInventoryRoute: typeof AuthenticatedAdminInventoryRoute
   AuthenticatedAdminSoldRoute: typeof AuthenticatedAdminSoldRoute
+  AuthenticatedAdminManageRoute: typeof AuthenticatedAdminManageRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminVehiclesNewRoute: typeof AuthenticatedAdminVehiclesNewRoute
   AuthenticatedAdminVehiclesIndexRoute: typeof AuthenticatedAdminVehiclesIndexRoute
@@ -726,6 +746,7 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminImportRoute: AuthenticatedAdminImportRoute,
     AuthenticatedAdminInventoryRoute: AuthenticatedAdminInventoryRoute,
     AuthenticatedAdminSoldRoute: AuthenticatedAdminSoldRoute,
+    AuthenticatedAdminManageRoute: AuthenticatedAdminManageRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
     AuthenticatedAdminVehiclesNewRoute: AuthenticatedAdminVehiclesNewRoute,
     AuthenticatedAdminVehiclesIndexRoute: AuthenticatedAdminVehiclesIndexRoute,
