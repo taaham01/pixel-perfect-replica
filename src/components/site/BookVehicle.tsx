@@ -29,7 +29,7 @@ export function BookVehicle({ vehicleId, vehicleName }: { vehicleId: string; veh
     queryKey: ["my-booking", user?.id, vehicleId],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase.from("bookings").select("id, status").eq("vehicle_id", vehicleId).in("status", ["pending", "confirmed"]).limit(1);
+      const { data, error } = await supabase.from("bookings").select("id, status").eq("user_id", user!.id).eq("vehicle_id", vehicleId).in("status", ["pending", "confirmed"]).limit(1);
       if (error) throw error;
       return data[0] ?? null;
     },
