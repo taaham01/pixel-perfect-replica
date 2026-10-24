@@ -6,6 +6,7 @@ import { Activity, Wrench, UserCheck, Car, CircleDollarSign, FileUp, CalendarChe
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { Logo } from "@/components/site/Logo";
+import { NavArrows } from "@/components/site/NavArrows";
 import { cn } from "@/lib/utils";
 import { isOwnerEmail, isPrimaryOwnerEmail } from "@/config/staff";
 
@@ -74,11 +75,12 @@ function AdminLayout() {
         {nav}
       </aside>
       <header className="sticky top-0 z-40 flex items-center justify-between bg-ink px-4 py-3 lg:hidden">
-        <Logo tone="light" />
+        <div className="flex items-center gap-3"><Logo tone="light" /><NavArrows /></div>
         <button onClick={() => setOpen(!open)} aria-label="Menu" className="text-ink-foreground">{open ? <X /> : <Menu />}</button>
       </header>
       {open && <div className="fixed inset-x-0 top-[60px] bottom-0 z-40 flex flex-col overflow-y-auto bg-ink lg:hidden">{nav}</div>}
       <main className="px-4 py-6 md:px-8 md:py-10 lg:ml-64">
+        <NavArrows tone="dark" className="mb-4 hidden lg:flex" />
         <Outlet />
       </main>
     </div>

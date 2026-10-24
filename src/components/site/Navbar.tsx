@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import { btn } from "./primitives";
 import { UserMenu } from "./UserMenu";
+import { NavArrows } from "./NavArrows";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -25,7 +26,10 @@ export function Navbar() {
   return (
     <header className={cn("fixed inset-x-0 top-0 z-50 transition-all duration-300", solid ? "border-b border-ink-line bg-ink/95 backdrop-blur-md" : "bg-transparent")}>
       <div className="container-x flex h-18 items-center justify-between gap-6 py-4">
-        <Logo tone="light" />
+        <div className="flex items-center gap-3 sm:gap-5">
+          <Logo tone="light" />
+          <NavArrows />
+        </div>
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Main">
           {navLinks.map((l) => (
             <Link key={l.to} to={l.to} className="text-sm font-medium text-ink-muted transition-colors hover:text-ink-foreground" activeProps={{ className: "!text-ink-foreground" }}>
