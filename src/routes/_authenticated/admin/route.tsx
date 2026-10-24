@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { Activity, Wrench, Car, CircleDollarSign, FileUp, CalendarCheck, LayoutDashboard, LogOut, Settings, UserRound, Menu, PlusCircle, Users, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { listCustomerApprovals } from "@/lib/admin.functions";
+import { Activity, Wrench, UserCheck, Car, CircleDollarSign, FileUp, CalendarCheck, LayoutDashboard, LogOut, Settings, UserRound, Menu, PlusCircle, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { Logo } from "@/components/site/Logo";
@@ -25,8 +26,12 @@ function AdminLayout() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  // Customers waiting for approval, shown as a count next to the sidebar link.
+  const approvals = useQuery({ queryKey: ["admin", "customer-approvals"], queryFn: () => listCustomerApprovals(), staleTime: 30_000, refetchInterval: 60_000 });
+  const waiting = (approvals.data ?? []).filter((c) => !c.approved && !c.suspended).length;
   const links = [
     { to: "/admin/manage", label: "Manage everything", icon: Wrench },
+    { to: "/admin/approvals", label: "Customer approvals", icon: UserCheck, badge: waiting },
     ...(admin.isSuper ? [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }] : []),
     { to: "/admin/vehicles", label: "Inventory", icon: Car, exact: true },
     { to: "/admin/vehicles/new", label: "Add vehicle", icon: PlusCircle },
@@ -50,11 +55,12 @@ function AdminLayout() {
           className="flex items-center gap-3 rounded-sm px-3 py-2.5 text-sm font-medium text-ink-muted transition-colors hover:bg-ink-soft hover:text-ink-foreground"
           activeProps={{ className: "!bg-ink-soft !text-ink-foreground" }}>
           <l.icon className="h-4 w-4" /> {l.label}
+          {"badge" in l && !!l.badge && <span className="ml-auto rounded-full bg-crimson px-2 py-0.5 text-[10px] font-bold text-primary-foreground">{l.badge}</span>}
         </Link>
       ))}
       <div className="mt-auto border-t border-ink-line pt-3">
         <p className="truncate px-3 text-xs text-ink-muted">{admin.email}</p>
-        <p className="px-3 text-[0.65rem] uppercase tracking-wider text-champagne">{admin.isSuper ? "Super Admin" : "Inventory Manager"}</p>
+        <p className="px-3 text-[0.65rem] uppercase tracking-wider text-champagne">{admin.isOwner ? "Owner" : admin.isSuper ? "Super Admin" : "Admin"}</p>
         <Link to="/settings" search={{ tab: "profile", from: "admin" }} onClick={() => setOpen(false)} className="mt-2 flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-ink-muted hover:bg-ink-soft hover:text-ink-foreground"><Settings className="h-4 w-4" /> Settings</Link>
         <button onClick={signOut} className="flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-sm text-ink-muted hover:bg-ink-soft hover:text-ink-foreground"><LogOut className="h-4 w-4" /> Sign out</button>
       </div>

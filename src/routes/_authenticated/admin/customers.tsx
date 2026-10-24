@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { deleteAccount, listCustomers, updateCustomer } from "@/lib/admin.functions";
+import { decideCustomer, deleteAccount, listCustomers, updateCustomer } from "@/lib/admin.functions";
 import { useAdmin } from "@/hooks/use-admin";
 import { btn } from "@/components/site/primitives";
 
@@ -43,12 +43,12 @@ function Customers() {
                 <td className="p-3 font-mono text-xs">{c.customer_number}</td>
                 <td className="p-3">{c.full_name ?? "—"}</td>
                 <td className="p-3">{c.email}</td>
-                <td className="p-3">{admin.isSuper ? (c.phone ?? "—") : <span className="text-muted-foreground">Super Admin only</span>} {c.phone_verified && <span className="text-xs text-champagne">✓ verified</span>}</td>
+                <td className="p-3">{admin.isSuper ? (c.phone ?? "—") : <span className="text-muted-foreground">Super Admin only</span>} {c.phone_verified && <span className="text-xs text-champagne">✓ approved</span>}</td>
                 <td className="p-3">{c.active ? "Active" : <span className="text-crimson">Suspended</span>}</td>
                 {admin.isSuper && (
                   <td className="flex flex-wrap gap-2 p-3">
                     <button onClick={() => update(c.id, { active: !c.active })} className={btn({ variant: "outline", size: "sm" })}>{c.active ? "Suspend" : "Reactivate"}</button>
-                    {!c.phone_verified && c.phone && <button onClick={() => update(c.id, { phoneVerified: true })} className={btn({ variant: "outline", size: "sm" })}>Mark phone verified</button>}
+                    {!c.phone_verified && <button onClick={() => decideCustomer({ data: { userId: c.id, action: "approve" } }).then(() => { toast.success("Customer approved"); void qc.invalidateQueries({ queryKey: ["admin"] }); }, (e: Error) => toast.error(e.message))} className={btn({ variant: "outline", size: "sm" })}>Approve</button>}
                     {admin.isOwner && <button onClick={() => remove(c.id, c.email)} className={btn({ variant: "outline", size: "sm" })}>Delete account</button>}
                   </td>
                 )}

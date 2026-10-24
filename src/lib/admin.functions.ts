@@ -307,6 +307,58 @@ export const setStaffPermissions = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/* ───────────── Customer approvals (any staff member) ───────────── */
+
+async function assertStaff(ctx: { userId: string }) {
+  if ((await rolesOf(ctx.userId)).length === 0) throw new Error("Only staff can do this.");
+}
+
+/**
+ * Staff: every customer account with name, email, phone and approval state, newest first.
+ * Approval is stored in profiles.phone_verified, which is what lets a customer book.
+ */
+export const listCustomerApprovals = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertStaff(context);
+    const admin = await getAdmin();
+    const [{ data: profiles, error }, { data: roles }] = await Promise.all([
+      admin.from("profiles").select("id, full_name, country, phone, phone_verified, customer_number, created_at").order("created_at", { ascending: false }),
+      admin.from("user_roles").select("user_id"),
+    ]);
+    if (error) throw new Error("Could not load customers.");
+    const staff = new Set((roles ?? []).map((r) => r.user_id));
+    const rows = (profiles ?? []).filter((p) => !staff.has(p.id));
+    const users = await Promise.all(rows.map((p) => admin.auth.admin.getUserById(p.id)));
+    return rows.flatMap((p, i) => {
+      const u = users[i]?.data.user;
+      if (!u || (u.app_metadata as { staff_request?: unknown })?.staff_request) return []; // staff sign-ups are handled on the Staff page
+      const suspended = !!u.banned_until && new Date(u.banned_until) > new Date();
+      return [{
+        id: p.id, customerNumber: p.customer_number, name: p.full_name ?? "", country: p.country ?? "", phone: p.phone ?? "",
+        email: u.email ?? "", emailConfirmed: !!u.email_confirmed_at, approved: p.phone_verified, suspended, createdAt: p.created_at,
+      }];
+    });
+  });
+
+/** Staff: approve a customer (they can book), take approval back, or decline (account suspended). */
+export const decideCustomer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid(), action: z.enum(["approve", "revoke", "decline"]) }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertStaff(context);
+    if ((await rolesOf(data.userId)).length > 0) throw new Error("This is a staff account. Use Manage staff instead.");
+    const admin = await getAdmin();
+    const { error } = await admin.from("profiles").update({ phone_verified: data.action === "approve" }).eq("id", data.userId);
+    if (error) throw new Error("Could not update the customer.");
+    if (data.action !== "revoke") {
+      const { error: banErr } = await admin.auth.admin.updateUserById(data.userId, { ban_duration: data.action === "decline" ? BAN_FOREVER : "none" });
+      if (banErr) throw new Error("Approval saved, but the account status could not be updated.");
+    }
+    await log(context.userId, actorEmail(context.claims), `customer.${data.action === "approve" ? "approved" : data.action === "revoke" ? "approval_revoked" : "declined"}`, data.userId, {});
+    return { ok: true };
+  });
+
 /** Customers = accounts with a profile and no staff role. Needs Super Admin or "view customers" permission. Phone numbers are returned for Super Admins only. */
 export const listCustomers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

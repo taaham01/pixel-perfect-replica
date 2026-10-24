@@ -7,11 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/hooks/use-customer";
 import { fetchCustomerDetails } from "@/lib/customer-details";
 import { cn } from "@/lib/utils";
-import { PhoneVerification } from "./PhoneVerification";
+import { ApprovalPending } from "./ApprovalStatus";
 import { btn } from "./primitives";
 import { fieldCls } from "./vehicles";
 
-/** Book-this-car box on the vehicle page. Customers must be signed in with a verified phone number. */
+/** Book-this-car box on the vehicle page. Customers must be signed in and approved by our team. */
 export function BookVehicle({ vehicleId, vehicleName }: { vehicleId: string; vehicleName: string }) {
   const { user, ready } = useCustomer();
   const qc = useQueryClient();
@@ -39,7 +39,7 @@ export function BookVehicle({ vehicleId, vehicleName }: { vehicleId: string; veh
     mutationFn: async () => {
       if (!user) throw new Error("Please sign in first.");
       const { error } = await supabase.from("bookings").insert({ user_id: user.id, vehicle_id: vehicleId, message: message.trim() || null });
-      if (error) throw new Error("We couldn't create your booking. The vehicle may no longer be available, or your phone isn't verified yet.");
+      if (error) throw new Error("We couldn't create your booking. The vehicle may no longer be available, or your account isn't approved yet.");
     },
     onSuccess: async () => {
       setOpen(false);
@@ -83,24 +83,15 @@ export function BookVehicle({ vehicleId, vehicleName }: { vehicleId: string; veh
   }
 
   const d = details.data;
-  if (!d || !d.phone) {
-    return (
-      <div className={shell}>
-        <p className="eyebrow text-crimson">Book this car</p>
-        <p className="mt-2 text-sm text-muted-foreground">Add your phone number to your account so we can verify you.</p>
-        <Link to="/account" className={cn(btn({ variant: "primary", size: "sm" }), "mt-4")}>Complete my details</Link>
-      </div>
-    );
-  }
-
-  if (!d.phoneVerified) return <div className="mt-8"><PhoneVerification phone={d.phone} userId={user.id} /></div>;
+  // Customers can book once our team has approved their account (approval is stored as phone_verified).
+  if (!d || !d.phone || !d.phoneVerified) return <ApprovalPending phone={d?.phone} className="mt-8" />;
 
   return (
     <div className={shell}>
       <p className="eyebrow text-crimson">Book this car</p>
       {!open ? (
         <>
-          <p className="mt-2 text-sm text-muted-foreground">Your phone is verified. Reserve {vehicleName} and our team will confirm it.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Your account is approved. Reserve {vehicleName} and our team will confirm it.</p>
           <button onClick={() => setOpen(true)} className={cn(btn({ variant: "primary", size: "lg" }), "mt-4 w-full")}><CalendarCheck className="h-4 w-4" /> Book this vehicle</button>
         </>
       ) : (

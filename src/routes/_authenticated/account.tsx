@@ -9,7 +9,7 @@ import { PageHero, btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { detailsSchema } from "@/lib/customer";
 import { fetchCustomerDetails } from "@/lib/customer-details";
-import { PhoneVerification } from "@/components/site/PhoneVerification";
+import { ApprovalPending } from "@/components/site/ApprovalStatus";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -84,9 +84,7 @@ function Account() {
           {isLoading && <p className="text-sm text-muted-foreground">Loading your details…</p>}
           {error && <p className="rounded-sm bg-crimson/10 p-3 text-sm text-crimson" role="alert">We couldn't load your details. Please refresh and try again.</p>}
 
-          {details && !showForm && details.phone && !details.phoneVerified && (
-            <div className="mb-6"><PhoneVerification phone={details.phone} userId={user.id} /></div>
-          )}
+          {details && !showForm && !details.phoneVerified && <ApprovalPending phone={details.phone} className="mb-6" />}
 
           {details && !showForm && (
             <div className="rounded-sm border border-border p-6">
@@ -96,7 +94,8 @@ function Account() {
               <dl className="mt-6 divide-y divide-border text-sm">
                 <Row label="Name" value={details.fullName || "—"} />
                 <Row label="Country" value={details.country || "—"} />
-                <Row label="Phone / WhatsApp" value={details.phone ? `${details.phone}${details.phoneVerified ? " ✓ verified" : ""}` : "—"} />
+                <Row label="Phone / WhatsApp" value={details.phone || "—"} />
+                <Row label="Account status" value={details.phoneVerified ? "✓ Approved" : "Awaiting approval"} />
                 <Row label="Email" value={user.email} />
               </dl>
               <div className="mt-6 flex flex-wrap gap-3">
@@ -118,7 +117,7 @@ function Account() {
                 </select>
               </label>
               <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Phone / WhatsApp</span><input name="phone" type="tel" required defaultValue={details?.phone} maxLength={30} className={fieldCls} />
-                {details?.phoneVerified && <span className="mt-1 block text-xs text-muted-foreground">Changing your number means it has to be verified again.</span>}
+                {details?.phoneVerified && <span className="mt-1 block text-xs text-muted-foreground">Changing your number means our team has to approve your account again.</span>}
               </label>
               <div className="flex gap-3">
                 <button disabled={save.isPending} className={cn(btn({ variant: "primary" }))}>{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save</button>

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowRight, Bell, CalendarCheck, Car, Check, CircleDollarSign, Clock, Copy, Download, FileUp, LayoutDashboard, Loader2, LogOut, Mail, MonitorSmartphone, PlusCircle, ShieldCheck, Trash2, UserRound, Users, Wrench, type LucideIcon } from "lucide-react";
+import { Activity, ArrowRight, Bell, CalendarCheck, Car, Check, CircleDollarSign, Clock, Copy, Download, FileUp, LayoutDashboard, Loader2, LogOut, Mail, MonitorSmartphone, PlusCircle, ShieldCheck, Trash2, UserCheck, UserRound, Users, Wrench, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { countries, site } from "@/config/site";
@@ -10,7 +10,7 @@ import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { ChangePasswordForm } from "@/components/site/ChangePasswordForm";
 import { PasswordInput } from "@/components/site/PasswordInput";
-import { PhoneVerification } from "@/components/site/PhoneVerification";
+import { ApprovalPending } from "@/components/site/ApprovalStatus";
 import { Switch } from "@/components/ui/switch";
 import { detailsSchema } from "@/lib/customer";
 import { fetchCustomerDetails } from "@/lib/customer-details";
@@ -94,7 +94,7 @@ export function AccountSettings({ userId, email, isStaff, showAdmin = false, tab
 
 /* ───────────────────────── Admin panel (staff only) ───────────────────────── */
 
-type AdminPath = "/admin" | "/admin/vehicles" | "/admin/vehicles/new" | "/admin/sold" | "/admin/import" | "/admin/bookings" | "/admin/customers" | "/admin/admins" | "/admin/activity";
+type AdminPath = "/admin" | "/admin/approvals" | "/admin/vehicles" | "/admin/vehicles/new" | "/admin/sold" | "/admin/import" | "/admin/bookings" | "/admin/customers" | "/admin/admins" | "/admin/activity";
 type AdminLink = { to: AdminPath; label: string; hint: string; icon: LucideIcon; need?: "super" | "bookings" | "customers" };
 const ADMIN_LINKS: { group: string; links: AdminLink[] }[] = [
   { group: "Overview", links: [{ to: "/admin", label: "Dashboard", hint: "Sales, stock and activity at a glance", icon: LayoutDashboard, need: "super" }] },
@@ -105,6 +105,7 @@ const ADMIN_LINKS: { group: string; links: AdminLink[] }[] = [
     { to: "/admin/import", label: "CSV import", hint: "Add many vehicles from a spreadsheet", icon: FileUp },
   ] },
   { group: "Customers", links: [
+    { to: "/admin/approvals", label: "Customer approvals", hint: "Check new sign-ups and approve them to book", icon: UserCheck },
     { to: "/admin/bookings", label: "Bookings", hint: "Reservation requests from customers", icon: CalendarCheck, need: "bookings" },
     { to: "/admin/customers", label: "Customers", hint: "Accounts and contact details", icon: UserRound, need: "customers" },
   ] },
@@ -251,14 +252,14 @@ function ProfileTab({ userId, email }: { userId: string; email: string }) {
               </label>
               <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Phone / WhatsApp</span>
                 <input name="phone" type="tel" required defaultValue={details?.phone} placeholder={dial ? `${dial} …` : "+254 700 000000"} maxLength={30} autoComplete="tel" className={fieldCls} />
-                <span className="mt-1 block text-xs text-muted-foreground">Include the country code{dial ? ` (${dial})` : ""}. Changing your number means it has to be verified again.</span>
+                <span className="mt-1 block text-xs text-muted-foreground">Include the country code{dial ? ` (${dial})` : ""}. Changing your number means our team has to approve your account again.</span>
               </label>
             </div>
             <div><button disabled={save.isPending} className={btn({ variant: "primary" })}>{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Save changes</button></div>
           </form>
         )}
-        {details && details.phone && !details.phoneVerified && <div className="mt-6"><PhoneVerification phone={details.phone} userId={userId} /></div>}
-        {details?.phoneVerified && <p className="mt-4 inline-flex items-center gap-2 text-sm text-emerald-700"><Check className="h-4 w-4" /> Phone number verified</p>}
+        {details && !details.phoneVerified && <ApprovalPending phone={details.phone} className="mt-6" />}
+        {details?.phoneVerified && <p className="mt-4 inline-flex items-center gap-2 text-sm text-emerald-700"><Check className="h-4 w-4" /> Account approved</p>}
       </Card>
 
       <Card title="Email address" description={`You sign in with ${email}. Changing it sends a confirmation link to the new address.`}>
