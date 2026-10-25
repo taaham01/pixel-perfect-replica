@@ -22,7 +22,7 @@ function Settings() {
     <>
       <PageHero eyebrow="Settings" title="Account settings" subtitle="Manage your profile, security, preferences and privacy in one place." />
       <section className="container-x py-10 md:py-14">
-        <AccountSettings userId={user.id} email={user.email} isStaff={roles.length > 0} showAdmin={from === "admin"} tab={tab} onTabChange={(id) => navigate({ search: { tab: id, from } })} />
+        <AccountSettings userId={user.id} email={user.email} isStaff={roles.length > 0} showAdmin={roles.length > 0} tab={tab} onTabChange={(id) => navigate({ search: { tab: id, from } })} />
       </section>
     </>
   );

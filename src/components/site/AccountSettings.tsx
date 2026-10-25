@@ -50,7 +50,7 @@ export function AccountSettings({ userId, email, isStaff, showAdmin = false, tab
   userId: string;
   email: string;
   isStaff: boolean;
-  /** Show the Admin panel section. Only true when Settings is opened from inside the admin area, never on the public site. */
+  /** Show the Admin panel section: true for staff accounts only, so customers never see it. */
   showAdmin?: boolean;
   tab: SettingsTab;
   onTabChange: (tab: SettingsTab) => void;

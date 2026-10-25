@@ -44,7 +44,7 @@ export function SettingsDialog({ open, onOpenChange, initialTab = "profile" }: {
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
           {user && isStaff !== undefined ? (
-            <AccountSettings variant="dialog" userId={user.id} email={email} isStaff={isStaff} tab={tab} onTabChange={setTab} />
+            <AccountSettings variant="dialog" userId={user.id} email={email} isStaff={isStaff} showAdmin={isStaff} tab={tab} onTabChange={setTab} />
           ) : (
             <div className="grid h-64 place-items-center text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>
           )}
