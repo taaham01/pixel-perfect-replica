@@ -2,17 +2,38 @@ import { Link } from "@tanstack/react-router";
 import { site } from "@/config/site";
 import { cn } from "@/lib/utils";
 
-export function Logo({ tone = "dark" }: { tone?: "dark" | "light" }) {
+/**
+ * The brand logo: the gold emblem plus the "ALHASANMOTORS JAPAN" wordmark, both cut from the
+ * official logo artwork (public/brand) so the lettering is exactly the logo's.
+ * tone "light" = for dark backgrounds (white lettering); "dark" = for light backgrounds.
+ * layout "row" sits side by side (top bars); "stacked" puts the wordmark under the emblem.
+ */
+export function Logo({ tone = "dark", layout = "row", size = "md", className }: {
+  tone?: "dark" | "light";
+  layout?: "row" | "stacked";
+  size?: "md" | "lg";
+  className?: string;
+}) {
+  const wordmark = tone === "light" ? "/brand/wordmark-light.png" : "/brand/wordmark-dark.png";
+  const stacked = layout === "stacked";
   return (
-    <Link to="/" className="group flex items-center gap-3" aria-label={site.name}>
-      <span className="relative grid h-9 w-9 place-items-center rounded-sm bg-crimson text-primary-foreground">
-        <span className="text-sm font-extrabold">AH</span>
-        <span className="absolute -bottom-1 -right-1 h-2 w-2 rounded-full bg-champagne" />
-      </span>
-      <span className="flex flex-col leading-none">
-        <span className={cn("text-[0.95rem] font-extrabold tracking-[0.08em]", tone === "light" ? "text-ink-foreground" : "text-foreground")}>{site.shortName}</span>
-        <span className={cn("mt-1 font-mono text-[0.6rem] tracking-[0.32em]", tone === "light" ? "text-ink-muted" : "text-muted-foreground")}>{site.subName}</span>
-      </span>
+    <Link to="/" className={cn("group inline-flex shrink-0", stacked ? "flex-col items-center gap-3" : "items-center gap-1.5 sm:gap-2.5", className)} aria-label={`${site.name} — home`}>
+      <img
+        src="/brand/emblem.png"
+        alt=""
+        width={366}
+        height={240}
+        className={cn("w-auto select-none", stacked ? (size === "lg" ? "h-24" : "h-14") : "h-8 sm:h-10")}
+        draggable={false}
+      />
+      <img
+        src={wordmark}
+        alt={site.name}
+        width={900}
+        height={50}
+        className={cn("w-auto select-none", stacked ? (size === "lg" ? "h-[17px]" : "h-[11px]") : "h-[9px] sm:h-[13px]")}
+        draggable={false}
+      />
     </Link>
   );
 }

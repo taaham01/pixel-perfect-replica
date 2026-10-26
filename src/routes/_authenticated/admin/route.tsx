@@ -83,7 +83,7 @@ function AdminLayout() {
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col bg-ink lg:flex">
-        <div className="border-b border-ink-line p-5"><Logo tone="light" /></div>
+        <div className="flex justify-center border-b border-ink-line p-5"><Logo tone="light" layout="stacked" /></div>
         {nav}
       </aside>
       <header className="sticky top-0 z-40 flex items-center justify-between bg-ink px-4 py-3 lg:hidden">

@@ -7,7 +7,7 @@ export function AuthCard({ title, subtitle, children }: { title: string; subtitl
     <div className="relative flex min-h-screen items-center justify-center bg-ink px-4 py-16">
       <NavArrows className="absolute left-4 top-4" />
       <div className="w-full max-w-md">
-        <div className="mb-8 flex justify-center"><Logo tone="light" /></div>
+        <div className="mb-8 flex justify-center"><Logo tone="light" layout="stacked" size="lg" /></div>
         <div className="rounded-sm border border-border bg-card p-8 shadow-lift">
           <p className="eyebrow text-crimson">Admin</p>
           <h1 className="mt-2 text-2xl font-bold">{title}</h1>
