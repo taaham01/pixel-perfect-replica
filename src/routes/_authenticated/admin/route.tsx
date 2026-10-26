@@ -9,6 +9,7 @@ import { Logo } from "@/components/site/Logo";
 import { NavArrows } from "@/components/site/NavArrows";
 import { cn } from "@/lib/utils";
 import { isOwnerEmail, isPrimaryOwnerEmail } from "@/config/staff";
+import { site } from "@/config/site";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async ({ context }) => {
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
     const perms = { publish: isSuper || !!p?.can_publish, bookings: isSuper || !!p?.can_manage_bookings, customers: isSuper || !!p?.can_view_customers };
     return { admin: { ...context.user, roles: context.roles, isSuper, isOwner: isSuper && isOwnerEmail(context.user.email), isPrimaryOwner: isSuper && isPrimaryOwnerEmail(context.user.email), perms } };
   },
-  head: () => ({ meta: [{ title: "Admin — AL-HASSAN MOTORS JAPAN" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: `Admin — ${site.name}` }, { name: "robots", content: "noindex" }] }),
   component: AdminLayout,
 });
 
@@ -35,6 +36,11 @@ function AdminLayout() {
     queryKey: ["admin", "inquiries-new"], staleTime: 30_000, refetchInterval: 60_000,
     queryFn: async () => (await supabase.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "new")).count ?? 0,
   });
+  // Bookings waiting for the team.
+  const pendingBookings = useQuery({
+    queryKey: ["admin", "bookings-pending"], staleTime: 30_000, refetchInterval: 60_000, enabled: admin.perms.bookings,
+    queryFn: async () => (await supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "pending")).count ?? 0,
+  });
   const links = [
     { to: "/admin/manage", label: "Manage everything", icon: Wrench },
     { to: "/admin/approvals", label: "Customer approvals", icon: UserCheck, badge: waiting },
@@ -44,7 +50,7 @@ function AdminLayout() {
     { to: "/admin/vehicles/new", label: "Add vehicle", icon: PlusCircle },
     { to: "/admin/sold", label: "Sold vehicles", icon: CircleDollarSign },
     { to: "/admin/import", label: "CSV import", icon: FileUp },
-    ...(admin.perms.bookings ? [{ to: "/admin/bookings", label: "Bookings", icon: CalendarCheck }] : []),
+    ...(admin.perms.bookings ? [{ to: "/admin/bookings", label: "Bookings", icon: CalendarCheck, badge: pendingBookings.data ?? 0 }] : []),
     ...(admin.perms.customers ? [{ to: "/admin/customers", label: "Customers", icon: UserRound }] : []),
     ...(admin.isSuper ? [{ to: "/admin/admins", label: "Manage staff", icon: Users }, { to: "/admin/activity", label: "Activity log", icon: Activity }] : []),
   ];

@@ -101,7 +101,7 @@ function VehicleDetail() {
               : <a href="#inquiry" className={btn({ variant: "primary", size: "lg" })}>Request Export Quote</a>}
             <a href={wa} target="_blank" rel="noreferrer" className={btn({ variant: "whatsapp", size: "lg" })}><MessageCircle className="h-4 w-4" /> Chat on WhatsApp</a>
           </div>
-          {v.status === "available" && <BookVehicle vehicleId={v.id} vehicleName={name} />}
+          {!sold && <BookVehicle vehicleId={v.id} vehicleName={name} vehicleStatus={v.status} />}
         </div>
       </section>
 

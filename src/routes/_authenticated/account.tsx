@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, Loader2, LogOut } from "lucide-react";
+import { CalendarCheck, Check, Copy, Loader2, LogOut, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { countries, site } from "@/config/site";
@@ -10,6 +10,8 @@ import { fieldCls } from "@/components/site/vehicles";
 import { detailsSchema } from "@/lib/customer";
 import { fetchCustomerDetails } from "@/lib/customer-details";
 import { ApprovalPending } from "@/components/site/ApprovalStatus";
+import { CONTACT_METHODS, bookingStatusInfo } from "@/components/site/BookVehicle";
+import { vehiclePrice, mapVehicle } from "@/data/vehicles";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/account")({
@@ -31,7 +33,7 @@ function Account() {
   const bookings = useQuery({
     queryKey: ["my-bookings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("bookings").select("*, vehicles(make, model, year)").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("bookings").select("*, vehicles(*)").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -56,6 +58,15 @@ function Account() {
       toast.success("Your details have been saved.");
     },
     onError: (e: Error) => toast.error(e.message || "Could not save your details."),
+  });
+
+  const cancel = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id);
+      if (error) throw new Error("We couldn't cancel this booking. Please contact us.");
+    },
+    onSuccess: async () => { toast.success("Booking cancelled."); await qc.invalidateQueries({ queryKey: ["my-bookings"] }); await qc.invalidateQueries({ queryKey: ["my-booking"] }); },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -128,17 +139,51 @@ function Account() {
         </div>
 
         <div className="lg:col-span-7">
-          <h2 className="text-xl font-bold">My booking requests</h2>
-          <ul className="mt-4 divide-y divide-border rounded-sm border border-border">
-            {bookings.isLoading && <li className="p-4 text-muted-foreground">Loading…</li>}
-            {bookings.data?.length === 0 && <li className="p-4 text-muted-foreground">No bookings yet.</li>}
-            {bookings.data?.map((b) => (
-              <li key={b.id} className="flex justify-between gap-4 p-4">
-                <span>{b.vehicles ? `${b.vehicles.year} ${b.vehicles.make} ${b.vehicles.model}` : "Vehicle"}</span>
-                <span className="capitalize">{b.status}</span>
-              </li>
-            ))}
-          </ul>
+          <h2 id="bookings" className="scroll-mt-28 text-xl font-bold">My bookings &amp; reservations</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Book a car from its page. Once our team confirms, it's reserved in your name.</p>
+          <div className="mt-4 grid gap-3">
+            {bookings.isLoading && <p className="rounded-sm border border-border p-4 text-muted-foreground">Loading…</p>}
+            {bookings.data?.length === 0 && (
+              <div className="rounded-sm border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                <CalendarCheck className="mx-auto mb-2 h-6 w-6" />
+                You haven't booked a car yet.
+                <div className="mt-4"><Link to="/vehicles" className={btn({ variant: "primary", size: "sm" })}>Browse vehicles</Link></div>
+              </div>
+            )}
+            {bookings.data?.map((b) => {
+              const v = b.vehicles ? mapVehicle(b.vehicles) : null;
+              const info = bookingStatusInfo[b.status] ?? bookingStatusInfo.pending!;
+              const active = b.status === "pending" || b.status === "confirmed";
+              return (
+                <article key={b.id} className={cn("flex gap-4 rounded-sm border p-4", active ? "border-border bg-card" : "border-border/60 opacity-80")}>
+                  <div className="h-20 w-28 shrink-0 overflow-hidden rounded-sm bg-muted">
+                    {v?.thumbUrl && <img src={v.thumbUrl} alt="" loading="lazy" className="h-full w-full object-cover" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        {v ? <Link to="/vehicles/$slug" params={{ slug: v.slug }} className="font-semibold hover:text-crimson">{v.year} {v.make} {v.model}</Link> : <span className="font-semibold">Vehicle no longer listed</span>}
+                        {v && <p className="text-xs text-muted-foreground"><span className="font-mono">{v.stockId}</span> · {vehiclePrice(v)}</p>}
+                      </div>
+                      <span className={cn("rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", info.tone)}>{info.label}</span>
+                    </div>
+                    <p className="mt-2 text-sm text-muted-foreground">{info.hint}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Booked {new Date(b.created_at).toLocaleDateString()}
+                      {b.destination ? ` · To ${b.destination}` : ""}
+                      {b.contact_method ? ` · Contact by ${CONTACT_METHODS.find((m) => m.id === b.contact_method)?.label ?? b.contact_method}` : ""}
+                    </p>
+                    {b.staff_note && <p className="mt-2 rounded-sm bg-secondary/60 p-2 text-sm"><span className="font-semibold">Message from our team:</span> {b.staff_note}</p>}
+                    {active && (
+                      <button onClick={() => { if (window.confirm("Cancel this booking?")) cancel.mutate(b.id); }} disabled={cancel.isPending} className={cn(btn({ variant: "link", size: "sm" }), "mt-1 h-auto py-1")}>
+                        <X className="h-4 w-4" /> Cancel booking
+                      </button>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </div>
       </section>
     </>

@@ -3,8 +3,8 @@
  * Values marked [PLACEHOLDER] must be replaced with real information.
  */
 export const site = {
-  name: "AL-HASSAN MOTORS JAPAN",
-  shortName: "AL-HASSAN",
+  name: "AL-HASAN MOTORS JAPAN",
+  shortName: "AL-HASAN",
   subName: "MOTORS JAPAN",
   tagline: "Japanese vehicles. Delivered worldwide.",
   url: "https://example.com", // [PLACEHOLDER] production domain
