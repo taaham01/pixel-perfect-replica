@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, CheckCircle2, Clock, Loader2, Lock, X } from "lucide-react";
 import { toast } from "sonner";
@@ -19,8 +19,8 @@ export const CONTACT_METHODS = [
 
 /** Shared wording for each booking status, used here and on the account page. */
 export const bookingStatusInfo: Record<string, { label: string; hint: string; tone: string }> = {
-  pending: { label: "Requested", hint: "Our team will contact you shortly to confirm your reservation.", tone: "bg-champagne/25 text-foreground" },
-  confirmed: { label: "Reserved for you", hint: "This car is reserved in your name. Our team will guide you through payment and shipping.", tone: "bg-emerald-600/15 text-emerald-800" },
+  pending: { label: "Requested", hint: "Our team will contact you shortly about this car.", tone: "bg-champagne/25 text-foreground" },
+  confirmed: { label: "Reserved", hint: "This car is reserved for you. Our team will contact you about payment and shipping.", tone: "bg-emerald-600/15 text-emerald-800" },
   completed: { label: "Completed", hint: "This purchase is complete. Thank you for buying with us.", tone: "bg-secondary text-foreground" },
   cancelled: { label: "Cancelled", hint: "This booking was cancelled.", tone: "bg-crimson/10 text-crimson" },
 };
@@ -29,6 +29,7 @@ export const bookingStatusInfo: Record<string, { label: string; hint: string; to
 export function BookVehicle({ vehicleId, vehicleName, vehicleStatus }: { vehicleId: string; vehicleName: string; vehicleStatus: string }) {
   const { user, ready } = useCustomer();
   const qc = useQueryClient();
+  const router = useRouter();
   const here = useRouterState({ select: (s) => s.location.href });
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
@@ -54,6 +55,10 @@ export function BookVehicle({ vehicleId, vehicleName, vehicleStatus }: { vehicle
   const refresh = () => Promise.all([
     qc.invalidateQueries({ queryKey: ["my-booking", user?.id, vehicleId] }),
     qc.invalidateQueries({ queryKey: ["my-bookings"] }),
+    qc.invalidateQueries({ queryKey: ["my-active-bookings"] }),
+    qc.invalidateQueries({ queryKey: ["vehicle"] }),
+    qc.invalidateQueries({ queryKey: ["vehicles"] }),
+    router.invalidate(), // reload the car so its Reserved/Available status updates
   ]);
 
   const book = useMutation({
@@ -64,14 +69,14 @@ export function BookVehicle({ vehicleId, vehicleName, vehicleStatus }: { vehicle
         destination: destination.trim() || null, contact_method: contact,
       });
       if (error) {
-        if (error.message.includes("5 active bookings")) throw new Error(error.message);
-        if (error.code === "23505") throw new Error("You've already booked this car.");
-        throw new Error("We couldn't book this car. It may have just been reserved by someone else, or your account isn't approved yet.");
+        if (error.message.includes("active reservations") || error.message.includes("reserved by another")) throw new Error(error.message);
+        if (error.code === "23505") throw new Error("You've already reserved this car.");
+        throw new Error("We couldn't reserve this car. It may have just been reserved by someone else, or your account isn't approved yet.");
       }
     },
     onSuccess: async () => {
       setOpen(false); setMessage(""); setDestination("");
-      toast.success("Booking requested. Our team will contact you to confirm your reservation.");
+      toast.success("Car reserved for you. It's now in My bookings — our team will contact you shortly.");
       await refresh();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -93,8 +98,8 @@ export function BookVehicle({ vehicleId, vehicleName, vehicleStatus }: { vehicle
     if (vehicleStatus !== "available") return null;
     return (
       <div className={shell}>
-        <p className="eyebrow text-crimson">Book &amp; reserve</p>
-        <p className="mt-2 text-sm text-muted-foreground">Sign in or create an account to book and reserve {vehicleName}.</p>
+        <p className="eyebrow text-crimson">Reserve this car</p>
+        <p className="mt-2 text-sm text-muted-foreground">Sign in or create an account to reserve {vehicleName}. New accounts are approved by our team first.</p>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link to="/login" search={{ redirect: here }} className={btn({ variant: "primary", size: "sm" })}>Sign in</Link>
           <Link to="/signup" search={{ redirect: here }} className={btn({ variant: "outline", size: "sm" })}>Create account</Link>
@@ -112,15 +117,15 @@ export function BookVehicle({ vehicleId, vehicleName, vehicleStatus }: { vehicle
     return (
       <div className={shell}>
         <div className="flex items-center justify-between gap-3">
-          <p className="eyebrow text-crimson">Your booking</p>
+          <p className="eyebrow text-crimson">Your reservation</p>
           <span className={cn("rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", info.tone)}>{info.label}</span>
         </div>
         <p className="mt-3 flex items-start gap-2 text-sm"><Icon className="mt-0.5 h-4 w-4 shrink-0 text-crimson" /> {info.hint}</p>
         {existing.data.staff_note && <p className="mt-3 rounded-sm bg-secondary/60 p-3 text-sm"><span className="font-semibold">Message from our team:</span> {existing.data.staff_note}</p>}
         <div className="mt-4 flex flex-wrap gap-3">
           <Link to="/account" className={btn({ variant: "outline", size: "sm" })}>My bookings</Link>
-          <button onClick={() => { if (window.confirm("Cancel your booking for this car?")) cancel.mutate(existing.data!.id); }} disabled={cancel.isPending} className={btn({ variant: "link", size: "sm" })}>
-            {cancel.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />} Cancel booking
+          <button onClick={() => { if (window.confirm("Cancel your reservation for this car? It will become available to other customers.")) cancel.mutate(existing.data!.id); }} disabled={cancel.isPending} className={btn({ variant: "link", size: "sm" })}>
+            {cancel.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />} Cancel reservation
           </button>
         </div>
       </div>
@@ -143,11 +148,11 @@ export function BookVehicle({ vehicleId, vehicleName, vehicleStatus }: { vehicle
 
   return (
     <div className={shell}>
-      <p className="eyebrow text-crimson">Book &amp; reserve</p>
+      <p className="eyebrow text-crimson">Reserve this car</p>
       {!open ? (
         <>
-          <p className="mt-2 text-sm text-muted-foreground">Your account is approved. Book {vehicleName} and our team will confirm and reserve it in your name.</p>
-          <button onClick={() => setOpen(true)} className={cn(btn({ variant: "primary", size: "lg" }), "mt-4 w-full")}><CalendarCheck className="h-4 w-4" /> Book this vehicle</button>
+          <p className="mt-2 text-sm text-muted-foreground">Your account is approved. Reserve {vehicleName} now and it's held in your name while our team contacts you.</p>
+          <button onClick={() => setOpen(true)} className={cn(btn({ variant: "primary", size: "lg" }), "mt-4 w-full")}><CalendarCheck className="h-4 w-4" /> Reserve this car</button>
         </>
       ) : (
         <form onSubmit={(e) => { e.preventDefault(); book.mutate(); }} className="mt-3 grid gap-3">
@@ -167,9 +172,9 @@ export function BookVehicle({ vehicleId, vehicleName, vehicleStatus }: { vehicle
           <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Message (optional)</span>
             <textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={500} rows={3} placeholder="Questions, preferred shipping, timeline…" className={cn(fieldCls, "h-auto py-3")} />
           </label>
-          <p className="text-xs text-muted-foreground">Booking is free. The car is reserved for you once our team confirms it with you.</p>
+          <p className="text-xs text-muted-foreground">Reserving is free and happens straight away. You can cancel from My bookings.</p>
           <div className="flex gap-3">
-            <button disabled={book.isPending} className={btn({ variant: "primary" })}>{book.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Confirm booking</button>
+            <button disabled={book.isPending} className={btn({ variant: "primary" })}>{book.isPending && <Loader2 className="h-4 w-4 animate-spin" />} Confirm reservation</button>
             <button type="button" onClick={() => setOpen(false)} className={btn({ variant: "outline" })}>Cancel</button>
           </div>
         </form>

@@ -14,14 +14,14 @@ import { cn } from "@/lib/utils";
 type BStatus = Database["public"]["Enums"]["booking_status"];
 const STATUS_OPTIONS: { id: BStatus; label: string; hint: string }[] = [
   { id: "pending", label: "Requested", hint: "Waiting for the team" },
-  { id: "confirmed", label: "Confirmed – car reserved", hint: "Car is marked Reserved" },
+  { id: "confirmed", label: "Reserved", hint: "Car is marked Reserved" },
   { id: "completed", label: "Completed – car sold", hint: "Car is marked Sold" },
   { id: "cancelled", label: "Cancelled", hint: "Car is released" },
 ];
 const FILTERS: { id: BStatus | "active" | "all"; label: string }[] = [
-  { id: "pending", label: "Requested" },
+  { id: "active", label: "Active" },
   { id: "confirmed", label: "Reserved" },
-  { id: "active", label: "All active" },
+  { id: "pending", label: "Requested" },
   { id: "completed", label: "Completed" },
   { id: "cancelled", label: "Cancelled" },
   { id: "all", label: "All" },
@@ -42,7 +42,7 @@ export const Route = createFileRoute("/_authenticated/admin/bookings")({
 
 function Bookings() {
   const qc = useQueryClient();
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("pending");
+  const [filter, setFilter] = useState<(typeof FILTERS)[number]["id"]>("active");
   const [search, setSearch] = useState("");
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
@@ -88,7 +88,7 @@ function Bookings() {
       <div>
         <p className="eyebrow text-crimson">Customers</p>
         <h1 className="mt-1 text-3xl font-bold">Bookings &amp; reservations</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Confirming a booking marks the car <strong>Reserved</strong>; completing it marks the car <strong>Sold</strong>; cancelling releases it.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Approved customers reserve cars instantly — the car shows <strong>Reserved</strong>. Mark it <strong>Completed</strong> when sold (car becomes Sold) or <strong>Cancelled</strong> to release it.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -117,7 +117,7 @@ function Bookings() {
           const note = notes[b.id] ?? b.staff_note ?? "";
           const others = (activePerCar.get(b.vehicle_id) ?? 0) - (b.status === "pending" || b.status === "confirmed" ? 1 : 0);
           return (
-            <article key={b.id} className={cn("rounded-sm border bg-card p-4", b.status === "pending" ? "border-crimson/40" : "border-border")}>
+            <article key={b.id} className={cn("rounded-sm border bg-card p-4", (b.status === "pending" || b.status === "confirmed") && !b.staff_note ? "border-crimson/40" : "border-border")}>
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   {v ? (
@@ -164,7 +164,7 @@ function Bookings() {
 
               <div className="mt-3 flex flex-wrap items-end gap-2">
                 <label className="min-w-0 flex-1">
-                  <span className="mb-1 block text-xs text-muted-foreground">Message to the customer (shown on their booking)</span>
+                  <span className="mb-1 block text-xs text-muted-foreground">Message to the customer (shown on their reservation — sending one marks it as handled)</span>
                   <input value={note} onChange={(e) => setNotes((n) => ({ ...n, [b.id]: e.target.value }))} maxLength={500} placeholder="e.g. Reserved until 15 Nov — we'll send the invoice on WhatsApp" className={cn(fieldCls, "h-9")} />
                 </label>
                 {note !== (b.staff_note ?? "") && (

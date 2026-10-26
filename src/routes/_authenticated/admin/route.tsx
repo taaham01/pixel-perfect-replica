@@ -36,10 +36,10 @@ function AdminLayout() {
     queryKey: ["admin", "inquiries-new"], staleTime: 30_000, refetchInterval: 60_000,
     queryFn: async () => (await supabase.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "new")).count ?? 0,
   });
-  // Bookings waiting for the team.
+  // Active reservations the team hasn't messaged yet.
   const pendingBookings = useQuery({
     queryKey: ["admin", "bookings-pending"], staleTime: 30_000, refetchInterval: 60_000, enabled: admin.perms.bookings,
-    queryFn: async () => (await supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "pending")).count ?? 0,
+    queryFn: async () => (await supabase.from("bookings").select("id", { count: "exact", head: true }).in("status", ["pending", "confirmed"]).is("staff_note", null)).count ?? 0,
   });
   const links = [
     { to: "/admin/manage", label: "Manage everything", icon: Wrench },
