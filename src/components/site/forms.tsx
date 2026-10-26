@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { Check, Loader2 } from "lucide-react";
 import { countries } from "@/config/site";
 import { bodyTypes, commonMakes, fuels, transmissions } from "@/data/vehicles";
-import { submitForm, type FormKind } from "@/lib/inquiries";
+import { HONEYPOT, submitForm, type FormKind } from "@/lib/inquiries";
 import { cn } from "@/lib/utils";
 import { btn } from "./primitives";
 import { fieldCls } from "./vehicles";
@@ -13,7 +13,7 @@ type Field =
   | { name: string; label: string; type: "select"; options: string[]; required?: boolean; full?: boolean }
   | { name: string; label: string; type: "textarea"; required?: boolean; placeholder?: string; full?: boolean };
 
-function FormBuilder({ kind, fields, submitLabel, cols = 2, tone = "light" }: { kind: FormKind; fields: Field[]; submitLabel: string; cols?: 1 | 2; tone?: "light" | "card" }) {
+function FormBuilder({ kind, fields, submitLabel, cols = 2, tone = "light", vehicleId }: { kind: FormKind; fields: Field[]; submitLabel: string; cols?: 1 | 2; tone?: "light" | "card"; vehicleId?: string }) {
   const [state, setState] = useState<"idle" | "loading" | "done">("idle");
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,18 +21,18 @@ function FormBuilder({ kind, fields, submitLabel, cols = 2, tone = "light" }: { 
     const data = Object.fromEntries(new FormData(form)) as Record<string, string>;
     setState("loading");
     try {
-      await submitForm(kind, data);
+      await submitForm(kind, data, { vehicleId });
       setState("done");
       toast.success("Thank you — our team will contact you shortly.");
       form.reset();
       setTimeout(() => setState("idle"), 4000);
-    } catch {
+    } catch (err) {
       setState("idle");
-      toast.error("Something went wrong. Please try again or contact us on WhatsApp.");
+      toast.error(err instanceof Error && err.message.includes("wait") ? err.message : "Something went wrong. Please try again or contact us on WhatsApp.");
     }
   }
   return (
-    <form onSubmit={onSubmit} className={cn("grid gap-4", cols === 2 && "sm:grid-cols-2", tone === "card" && "")}>
+    <form onSubmit={onSubmit} className={cn("relative grid gap-4", cols === 2 && "sm:grid-cols-2", tone === "card" && "")}>
       {fields.map((f) => (
         <label key={f.name} className={cn("block", (f.full || f.type === "textarea" || cols === 1) && "sm:col-span-2")}>
           <span className="eyebrow mb-2 block text-muted-foreground">{f.label}{f.required && <span className="text-crimson"> *</span>}</span>
@@ -48,6 +48,8 @@ function FormBuilder({ kind, fields, submitLabel, cols = 2, tone = "light" }: { 
           )}
         </label>
       ))}
+      {/* Spam trap: hidden from people, often filled in by bots. */}
+      <input type="text" name={HONEYPOT} tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-px w-px opacity-0" />
       <div className="sm:col-span-2">
         <button type="submit" disabled={state === "loading"} className={cn(btn({ variant: "primary", size: "lg" }), "w-full sm:w-auto")}>
           {state === "loading" ? <Loader2 className="h-4 w-4 animate-spin" /> : state === "done" ? <Check className="h-4 w-4" /> : null}
@@ -60,9 +62,9 @@ function FormBuilder({ kind, fields, submitLabel, cols = 2, tone = "light" }: { 
 
 const yearOpts = Array.from({ length: 20 }, (_, i) => String(new Date().getFullYear() - i));
 
-export function InquiryForm({ stockId, vehicle }: { stockId?: string; vehicle?: string }) {
+export function InquiryForm({ stockId, vehicle, vehicleId }: { stockId?: string; vehicle?: string; vehicleId?: string }) {
   return (
-    <FormBuilder kind="vehicle-inquiry" cols={1} submitLabel="Request This Vehicle" fields={[
+    <FormBuilder kind="vehicle-inquiry" cols={1} vehicleId={vehicleId} submitLabel="Request This Vehicle" fields={[
       { name: "name", label: "Name", required: true },
       { name: "country", label: "Country", type: "select", options: countries, required: true },
       { name: "email", label: "Email", type: "email", required: true },

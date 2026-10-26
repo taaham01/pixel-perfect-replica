@@ -88,6 +88,68 @@ export type Database = {
           },
         ]
       }
+      inquiries: {
+        Row: {
+          country: string | null
+          created_at: string
+          details: Json
+          email: string
+          id: string
+          kind: string
+          message: string | null
+          name: string
+          phone: string | null
+          staff_note: string | null
+          status: Database["public"]["Enums"]["inquiry_status"]
+          subject: string | null
+          updated_at: string
+          user_id: string | null
+          vehicle_id: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          details?: Json
+          email: string
+          id?: string
+          kind: string
+          message?: string | null
+          name: string
+          phone?: string | null
+          staff_note?: string | null
+          status?: Database["public"]["Enums"]["inquiry_status"]
+          subject?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vehicle_id?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          details?: Json
+          email?: string
+          id?: string
+          kind?: string
+          message?: string | null
+          name?: string
+          phone?: string | null
+          staff_note?: string | null
+          status?: Database["public"]["Enums"]["inquiry_status"]
+          subject?: string | null
+          updated_at?: string
+          user_id?: string | null
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inquiries_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phone_otps: {
         Row: {
           attempts: number
@@ -380,6 +442,7 @@ export type Database = {
     Enums: {
       app_role: "super_admin" | "inventory_manager"
       booking_status: "pending" | "confirmed" | "cancelled" | "completed"
+      inquiry_status: "new" | "contacted" | "closed"
       publish_state: "draft" | "published" | "archived"
       vehicle_status: "available" | "reserved" | "sold"
     }
@@ -511,6 +574,7 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "inventory_manager"],
       booking_status: ["pending", "confirmed", "cancelled", "completed"],
+      inquiry_status: ["new", "contacted", "closed"],
       publish_state: ["draft", "published", "archived"],
       vehicle_status: ["available", "reserved", "sold"],
     },

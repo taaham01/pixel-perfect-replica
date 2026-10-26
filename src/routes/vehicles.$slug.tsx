@@ -124,7 +124,7 @@ function VehicleDetail() {
               <p className="eyebrow text-crimson">Inquiry</p>
               <h2 className="mt-2 text-2xl font-bold">Request this vehicle</h2>
               <p className="mb-6 mt-2 text-sm text-muted-foreground">Receive a full export quotation including shipping to your port.</p>
-              <InquiryForm stockId={v.stockId} vehicle={name} />
+              <InquiryForm stockId={v.stockId} vehicle={name} vehicleId={v.id} />
             </div>
           </aside>
         )}

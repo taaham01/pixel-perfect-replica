@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { listCustomerApprovals } from "@/lib/admin.functions";
-import { Activity, Wrench, UserCheck, Car, CircleDollarSign, FileUp, CalendarCheck, LayoutDashboard, LogOut, Settings, UserRound, Menu, PlusCircle, Users, X } from "lucide-react";
+import { Activity, Wrench, UserCheck, Inbox, Car, CircleDollarSign, FileUp, CalendarCheck, LayoutDashboard, LogOut, Settings, UserRound, Menu, PlusCircle, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { Logo } from "@/components/site/Logo";
@@ -30,9 +30,15 @@ function AdminLayout() {
   // Customers waiting for approval, shown as a count next to the sidebar link.
   const approvals = useQuery({ queryKey: ["admin", "customer-approvals"], queryFn: () => listCustomerApprovals(), staleTime: 30_000, refetchInterval: 60_000 });
   const waiting = (approvals.data ?? []).filter((c) => !c.approved && !c.suspended).length;
+  // New messages from the website's forms.
+  const newInquiries = useQuery({
+    queryKey: ["admin", "inquiries-new"], staleTime: 30_000, refetchInterval: 60_000,
+    queryFn: async () => (await supabase.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "new")).count ?? 0,
+  });
   const links = [
     { to: "/admin/manage", label: "Manage everything", icon: Wrench },
     { to: "/admin/approvals", label: "Customer approvals", icon: UserCheck, badge: waiting },
+    { to: "/admin/inquiries", label: "Inquiries", icon: Inbox, badge: newInquiries.data ?? 0 },
     ...(admin.isSuper ? [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }] : []),
     { to: "/admin/vehicles", label: "Inventory", icon: Car, exact: true },
     { to: "/admin/vehicles/new", label: "Add vehicle", icon: PlusCircle },
