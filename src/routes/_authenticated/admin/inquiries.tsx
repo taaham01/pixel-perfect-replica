@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Car, Inbox, Loader2, Mail, MessageCircle, Phone, Search } from "lucide-react";
+import { Car, CheckCircle2, Inbox, Loader2, Lock, Mail, MessageCircle, Phone, PhoneCall, RotateCcw, Search, Send } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -9,6 +9,7 @@ import { formKindLabel, type FormKind } from "@/lib/inquiries";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { cn } from "@/lib/utils";
+import { useAdmin } from "@/hooks/use-admin";
 
 export const Route = createFileRoute("/_authenticated/admin/inquiries")({
   head: () => ({ meta: [{ title: "Inquiries — Admin" }, { name: "robots", content: "noindex" }] }),
@@ -22,7 +23,7 @@ const STATUSES: { id: Status | "all"; label: string }[] = [
   { id: "closed", label: "Closed" },
   { id: "all", label: "All" },
 ];
-const KINDS: (FormKind | "all")[] = ["all", "vehicle-inquiry", "vehicle-request", "dealer", "contact"];
+const KINDS: (FormKind | "all")[] = ["all", "question", "vehicle-inquiry", "vehicle-request", "dealer", "contact"];
 
 // Friendly labels for the extra fields each form collects.
 const detailLabel: Record<string, string> = {
@@ -50,7 +51,9 @@ function Inquiries() {
   const [status, setStatus] = useState<Status | "all">("new");
   const [kind, setKind] = useState<FormKind | "all">("all");
   const [search, setSearch] = useState("");
+  const me = useAdmin();
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [replies, setReplies] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState<string | null>(null);
 
   const counts: Record<string, number> = { all: q.data?.length ?? 0 };
@@ -59,7 +62,7 @@ function Inquiries() {
   const rows = (q.data ?? []).filter((i) => (status === "all" || i.status === status) && (kind === "all" || i.kind === kind)
     && (!term || [i.name, i.email, i.phone, i.country, i.subject, i.message].some((v) => (v ?? "").toLowerCase().includes(term))));
 
-  async function update(id: string, patch: { status?: Status; staff_note?: string | null }, msg: string) {
+  async function update(id: string, patch: { status?: Status; staff_note?: string | null; reply?: string | null }, msg: string) {
     setBusy(id);
     const { error } = await supabase.from("inquiries").update(patch).eq("id", id);
     setBusy(null);
@@ -73,7 +76,7 @@ function Inquiries() {
       <div>
         <p className="eyebrow text-crimson">Customers</p>
         <h1 className="mt-1 text-3xl font-bold">Inquiries</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Messages from the Contact, Request a Car, For Dealers and vehicle inquiry forms.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Messages from the website's forms and questions customers ask from their account.</p>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -104,6 +107,7 @@ function Inquiries() {
         {rows.map((i) => {
           const details = Object.entries((i.details ?? {}) as Record<string, string>);
           const note = notes[i.id] ?? i.staff_note ?? "";
+          const reply = replies[i.id] ?? i.reply ?? "";
           return (
             <article key={i.id} className={cn("rounded-sm border bg-card p-4", i.status === "new" ? "border-crimson/40" : "border-border")}>
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -138,10 +142,28 @@ function Inquiries() {
 
               {i.subject && <p className="mt-3 text-sm font-semibold">{i.subject}</p>}
               {i.message && <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">{i.message}</p>}
+              {i.status === "closed" && i.closed_at && (
+                <p className="mt-3 flex flex-wrap items-center gap-1.5 rounded-sm bg-secondary/60 p-2 text-xs text-muted-foreground">
+                  <Lock className="h-3.5 w-3.5" /> Closed {new Date(i.closed_at).toLocaleString()}
+                  {me.isSuper && <> by <strong className="text-foreground">{i.closed_by_email ?? "unknown"}</strong></>}
+                </p>
+              )}
               {details.length > 0 && (
                 <dl className="mt-3 grid gap-x-6 gap-y-1 rounded-sm bg-secondary/50 p-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
                   {details.map(([k, v]) => <div key={k} className="flex gap-2"><dt className="text-muted-foreground">{detailLabel[k] ?? k}:</dt><dd className="font-medium">{v}</dd></div>)}
                 </dl>
+              )}
+
+              {i.user_id && (
+                <div className="mt-3 flex flex-wrap items-end gap-2">
+                  <label className="min-w-0 flex-1">
+                    <span className="mb-1 block text-xs text-muted-foreground">Reply to the customer (they see it in their account){i.replied_at && <> · last sent {new Date(i.replied_at).toLocaleString()}{me.isSuper && i.replied_by_email ? ` by ${i.replied_by_email}` : ""}</>}</span>
+                    <textarea value={reply} onChange={(e) => setReplies((r) => ({ ...r, [i.id]: e.target.value }))} maxLength={4000} rows={2} placeholder="Write your answer…" className={cn(fieldCls, "h-auto py-2")} />
+                  </label>
+                  {reply.trim() !== (i.reply ?? "") && (
+                    <button disabled={busy === i.id || !reply.trim()} onClick={() => update(i.id, { reply: reply.trim(), ...(i.status === "new" ? { status: "contacted" as Status } : {}) }, "Reply sent to the customer's account")} className={btn({ variant: "primary", size: "sm" })}><Send className="h-4 w-4" /> Send reply</button>
+                  )}
+                </div>
               )}
 
               <div className="mt-3 flex flex-wrap items-end gap-2">
@@ -151,6 +173,17 @@ function Inquiries() {
                 </label>
                 {note !== (i.staff_note ?? "") && (
                   <button disabled={busy === i.id} onClick={() => update(i.id, { staff_note: note.trim() || null }, "Note saved")} className={btn({ variant: "outline", size: "sm" })}>Save note</button>
+                )}
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-3">
+                {busy === i.id ? <Loader2 className="m-2 h-4 w-4 animate-spin text-muted-foreground" /> : i.status === "closed" ? (
+                  <button onClick={() => update(i.id, { status: "new" }, "Inquiry reopened")} className={btn({ variant: "outline", size: "sm" })}><RotateCcw className="h-4 w-4" /> Reopen</button>
+                ) : (
+                  <>
+                    {i.status === "new" && <button onClick={() => update(i.id, { status: "contacted" }, "Marked as contacted")} className={btn({ variant: "outline", size: "sm" })}><PhoneCall className="h-4 w-4" /> Mark as contacted</button>}
+                    <button onClick={() => update(i.id, { status: "closed" }, "Inquiry closed")} className={btn({ variant: "primary", size: "sm" })}><CheckCircle2 className="h-4 w-4" /> Close inquiry</button>
+                  </>
                 )}
               </div>
             </article>

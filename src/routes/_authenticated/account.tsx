@@ -11,6 +11,7 @@ import { detailsSchema } from "@/lib/customer";
 import { fetchCustomerDetails } from "@/lib/customer-details";
 import { ApprovalPending } from "@/components/site/ApprovalStatus";
 import { CONTACT_METHODS, bookingStatusInfo } from "@/components/site/BookVehicle";
+import { AskQuestion } from "@/components/site/AskQuestion";
 import { vehiclePrice, mapVehicle } from "@/data/vehicles";
 import { cn } from "@/lib/utils";
 
@@ -138,7 +139,8 @@ function Account() {
           )}
         </div>
 
-        <div className="lg:col-span-7">
+        <div className="space-y-12 lg:col-span-7">
+          <div>
           <h2 id="bookings" className="scroll-mt-28 text-xl font-bold">My bookings &amp; reservations</h2>
           <p className="mt-1 text-sm text-muted-foreground">Book a car from its page. Once our team confirms, it's reserved in your name.</p>
           <div className="mt-4 grid gap-3">
@@ -184,6 +186,8 @@ function Account() {
               );
             })}
           </div>
+          </div>
+          <AskQuestion name={details?.fullName ?? ""} email={user.email} phone={details?.phone} country={details?.country} />
         </div>
       </section>
     </>

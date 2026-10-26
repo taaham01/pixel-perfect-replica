@@ -96,6 +96,9 @@ export type Database = {
       }
       inquiries: {
         Row: {
+          closed_at: string | null
+          closed_by: string | null
+          closed_by_email: string | null
           country: string | null
           created_at: string
           details: Json
@@ -105,6 +108,9 @@ export type Database = {
           message: string | null
           name: string
           phone: string | null
+          replied_at: string | null
+          replied_by_email: string | null
+          reply: string | null
           staff_note: string | null
           status: Database["public"]["Enums"]["inquiry_status"]
           subject: string | null
@@ -113,6 +119,9 @@ export type Database = {
           vehicle_id: string | null
         }
         Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_by_email?: string | null
           country?: string | null
           created_at?: string
           details?: Json
@@ -122,6 +131,9 @@ export type Database = {
           message?: string | null
           name: string
           phone?: string | null
+          replied_at?: string | null
+          replied_by_email?: string | null
+          reply?: string | null
           staff_note?: string | null
           status?: Database["public"]["Enums"]["inquiry_status"]
           subject?: string | null
@@ -130,6 +142,9 @@ export type Database = {
           vehicle_id?: string | null
         }
         Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          closed_by_email?: string | null
           country?: string | null
           created_at?: string
           details?: Json
@@ -139,6 +154,9 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string | null
+          replied_at?: string | null
+          replied_by_email?: string | null
+          reply?: string | null
           staff_note?: string | null
           status?: Database["public"]["Enums"]["inquiry_status"]
           subject?: string | null
@@ -429,6 +447,19 @@ export type Database = {
         }[]
       }
       has_perm: { Args: { _perm: string; _user_id: string }; Returns: boolean }
+      my_inquiries: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          kind: string
+          message: string | null
+          replied_at: string | null
+          reply: string | null
+          status: Database["public"]["Enums"]["inquiry_status"]
+          subject: string | null
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
