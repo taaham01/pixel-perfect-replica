@@ -41,7 +41,6 @@ export function Navbar() {
           <a href={whatsappLink()} target="_blank" rel="noreferrer" className={btn({ variant: "ghostLight", size: "sm" })}>
             <MessageCircle className="h-4 w-4" /> WhatsApp Us
           </a>
-          <Link to="/vehicles" className={btn({ variant: "primary", size: "sm" })}>Browse Vehicles</Link>
           <UserMenu />
         </div>
         <button onClick={() => setOpen((o) => !o)} className="relative h-10 w-10 lg:hidden" aria-label="Toggle menu" aria-expanded={open}>
@@ -57,9 +56,8 @@ export function Navbar() {
               <Link key={l.to} to={l.to} className="border-b border-ink-line py-4 text-lg font-semibold text-ink-foreground">{l.label}</Link>
             ))}
             <UserMenu layout="mobile" />
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <a href={whatsappLink()} target="_blank" rel="noreferrer" className={btn({ variant: "whatsapp" })}><MessageCircle className="h-4 w-4" /> WhatsApp</a>
-              <Link to="/vehicles" className={btn({ variant: "primary" })}>Browse</Link>
+            <div className="mt-6">
+              <a href={whatsappLink()} target="_blank" rel="noreferrer" className={cn(btn({ variant: "whatsapp" }), "w-full")}><MessageCircle className="h-4 w-4" /> WhatsApp Us</a>
             </div>
           </nav>
         </div>

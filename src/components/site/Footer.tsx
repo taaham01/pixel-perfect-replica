@@ -21,6 +21,7 @@ export function Footer() {
         </div>
         <FooterCol title="Company">
           {navLinks.map((l) => <Link key={l.to} to={l.to}>{l.label}</Link>)}
+          <Link to="/how-it-works">How It Works</Link>
         </FooterCol>
         <FooterCol title="Vehicles">
           {bodyTypes.slice(0, 5).map((b) => <Link key={b} to="/vehicles" search={{ body: b }}>{b}</Link>)}
