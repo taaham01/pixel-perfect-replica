@@ -1,12 +1,13 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionFast } from "@/lib/auth-store";
 
 export type AdminRole = "super_admin" | "inventory_manager";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = (await getSessionFast(5000))?.user ?? null;
     if (!user) {
       if (location.pathname.startsWith("/admin")) throw redirect({ to: "/admin/login", search: { redirect: location.href } });
       throw redirect({ to: "/login", search: { redirect: location.href } });

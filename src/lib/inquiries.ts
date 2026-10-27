@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionFast } from "@/lib/auth-store";
 import type { Json } from "@/integrations/supabase/types";
 
 /** Every website form saves into the inquiries table; staff see them in the admin portal (Inquiries). */
@@ -36,7 +37,7 @@ export async function submitForm(kind: FormKind, input: Record<string, string>, 
   const details: Record<string, string> = {};
   for (const [k, v] of Object.entries(data)) if (v?.trim()) details[k] = v.trim().slice(0, 500);
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = await getSessionFast();
   const { error } = await supabase.from("inquiries").insert({
     kind, name: name.slice(0, 120), email: email.slice(0, 254), phone: phone?.slice(0, 40) ?? null,
     country: country?.slice(0, 80) ?? null, subject: subject?.slice(0, 200) ?? null, message: message?.slice(0, 4000) ?? null,
@@ -48,7 +49,7 @@ export async function submitForm(kind: FormKind, input: Record<string, string>, 
 
 /** A signed-in customer asks a question from their account; it lands in admin Inquiries. */
 export async function askQuestion(input: { name: string; email: string; phone?: string; country?: string; subject: string; message: string }) {
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = await getSessionFast();
   if (!session) throw new Error("Please sign in first.");
   const { error } = await supabase.from("inquiries").insert({
     kind: "question", user_id: session.user.id,

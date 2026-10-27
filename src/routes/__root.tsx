@@ -8,7 +8,7 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -17,7 +17,7 @@ import { Footer } from "@/components/site/Footer";
 import { WhatsAppButton } from "@/components/site/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
 import { site } from "@/config/site";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuthState } from "@/lib/auth-store";
 import { useRouterState } from "@tanstack/react-router";
 
 function NotFoundComponent() {
@@ -129,14 +129,19 @@ function RootComponent() {
   const router = useRouter();
   const isAdmin = useRouterState({ select: (s) => s.location.pathname.startsWith("/admin") });
 
+  // Reload page data only when a different person signs in or out — not on every token refresh,
+  // which used to re-run the car list over and over.
+  const { ready, user } = useAuthState();
+  const userId = user?.id ?? null;
+  const lastUser = useRef<string | null | undefined>(undefined);
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-    });
-    return () => data.subscription.unsubscribe();
-  }, [router, queryClient]);
+    if (!ready) return;
+    if (lastUser.current === undefined) { lastUser.current = userId; return; }
+    if (lastUser.current === userId) return;
+    lastUser.current = userId;
+    void router.invalidate();
+    if (userId) void queryClient.invalidateQueries();
+  }, [ready, userId, router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>

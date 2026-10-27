@@ -60,7 +60,7 @@ function FormBuilder({ kind, fields, submitLabel, cols = 2, tone = "light", vehi
   );
 }
 
-const yearOpts = Array.from({ length: 20 }, (_, i) => String(new Date().getFullYear() - i));
+const yearOpts = () => Array.from({ length: 20 }, (_, i) => String(new Date().getFullYear() - i));
 
 export function InquiryForm({ stockId, vehicle, vehicleId }: { stockId?: string; vehicle?: string; vehicleId?: string }) {
   return (
@@ -84,7 +84,7 @@ export function VehicleRequestForm() {
       { name: "email", label: "Email", type: "email", required: true },
       { name: "make", label: "Preferred Make", type: "select", options: [...commonMakes, "Other"] },
       { name: "model", label: "Preferred Model", placeholder: "e.g. Prado, X-Trail" },
-      { name: "minYear", label: "Minimum Year", type: "select", options: yearOpts },
+      { name: "minYear", label: "Minimum Year", type: "select", options: yearOpts() },
       { name: "budget", label: "Maximum Budget (USD)", type: "number", placeholder: "25000" },
       { name: "maxMileage", label: "Maximum Mileage (km)", type: "number", placeholder: "80000" },
       { name: "transmission", label: "Transmission", type: "select", options: [...transmissions, "Any"] },

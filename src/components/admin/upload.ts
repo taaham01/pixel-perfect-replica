@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionFast } from "@/lib/auth-store";
 
 export const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export const MAX_INPUT_BYTES = 25 * 1024 * 1024;
@@ -44,7 +45,7 @@ export interface UploadedImage { storage_path: string; thumb_path: string; width
 
 /** Creates an optimised full-size image and a thumbnail, uploads both, returns their storage paths. */
 export async function processAndUpload(vehicleId: string, file: Blob, onProgress: (p: number) => void = () => {}): Promise<UploadedImage> {
-  const { data: { session } } = await supabase.auth.getSession();
+  const session = await getSessionFast();
   if (!session) throw new Error("Your session has expired. Please sign in again.");
   const [full, thumb] = await Promise.all([resize(file, 1920, 0.85), resize(file, 640, 0.78)]);
   const base = `vehicles/${vehicleId}/${crypto.randomUUID()}`;

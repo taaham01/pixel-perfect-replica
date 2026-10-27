@@ -107,7 +107,8 @@ export function SelectField({ label, value, onChange, options, placeholder = "An
   );
 }
 
-const years = Array.from({ length: 25 }, (_, i) => String(new Date().getFullYear() - i));
+// Built at render time: on the server, the clock reads 1970 outside a request, which broke page start-up.
+const yearList = () => Array.from({ length: 25 }, (_, i) => String(new Date().getFullYear() - i));
 const priceOpts = [5000, 10000, 20000, 30000, 50000, 80000, 120000].map((n) => ({ value: String(n), label: formatPrice(n) }));
 const kmOpts = [10000, 20000, 50000, 80000, 120000, 200000].map((n) => ({ value: String(n), label: formatMileage(n) }));
 
@@ -125,7 +126,7 @@ export function FilterPanel({ filters, onChange, facets, compact }: { filters: V
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <SelectField label="Make" value={filters.make} onChange={(v) => set("make", v)} options={facets.makes} />
         <SelectField label="Model" value={filters.model} onChange={(v) => set("model", v)} options={models} />
-        <SelectField label="Min. Year" value={filters.minYear} onChange={(v) => set("minYear", v)} options={years} />
+        <SelectField label="Min. Year" value={filters.minYear} onChange={(v) => set("minYear", v)} options={yearList()} />
         <SelectField label="Max. Price" value={filters.maxPrice} onChange={(v) => set("maxPrice", v)} options={priceOpts} />
         <SelectField label="Max. Mileage" value={filters.maxMileage} onChange={(v) => set("maxMileage", v)} options={kmOpts} />
         <SelectField label="Transmission" value={filters.transmission} onChange={(v) => set("transmission", v)} options={transmissions} />
@@ -139,8 +140,8 @@ export function FilterPanel({ filters, onChange, facets, compact }: { filters: V
       <SelectField label="Make" value={filters.make} onChange={(v) => set("make", v)} options={facets.makes} />
       <SelectField label="Model" value={filters.model} onChange={(v) => set("model", v)} options={models} />
       <div className="grid grid-cols-2 gap-3">
-        <SelectField label="Year from" value={filters.minYear} onChange={(v) => set("minYear", v)} options={years} />
-        <SelectField label="Year to" value={filters.maxYear} onChange={(v) => set("maxYear", v)} options={years} />
+        <SelectField label="Year from" value={filters.minYear} onChange={(v) => set("minYear", v)} options={yearList()} />
+        <SelectField label="Year to" value={filters.maxYear} onChange={(v) => set("maxYear", v)} options={yearList()} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <SelectField label="Price from" value={filters.minPrice} onChange={(v) => set("minPrice", v)} options={priceOpts} />

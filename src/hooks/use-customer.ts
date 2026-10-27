@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { isOwnerEmail } from "@/config/staff";
+import { useAuthState } from "@/lib/auth-store";
 
 export type AccountType = "owner" | "super_admin" | "admin" | "customer";
 export const accountTypeLabel: Record<AccountType, string> = { owner: "Owner", super_admin: "Super Admin", admin: "Admin", customer: "Customer" };
@@ -11,20 +10,7 @@ export type CustomerSummary = { customerNumber: string; fullName: string; countr
 
 /** The signed-in user (if any) plus their customer profile, kept in step with sign in / sign out. */
 export function useCustomer() {
-  const [user, setUser] = useState<User | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-      setReady(true);
-    });
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setReady(true);
-    });
-    return () => data.subscription.unsubscribe();
-  }, []);
+  const { user, ready } = useAuthState();
 
   const { data: profile } = useQuery({
     queryKey: ["customer-summary", user?.id],
