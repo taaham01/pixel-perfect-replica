@@ -78,7 +78,7 @@ function Admins() {
 
       <form onSubmit={onCreate} className="grid gap-3 rounded-sm border border-border bg-card p-5 md:grid-cols-4">
         <input name="email" type="email" required placeholder="Email" className={fieldCls} />
-        <PasswordInput name="password" minLength={10} required placeholder="Temporary password (10+)" className={fieldCls} />
+        <PasswordInput name="password" minLength={12} required placeholder="Temporary password (12+, Aa1!)" className={fieldCls} />
         <select name="role" className={fieldCls}>
           <option value="inventory_manager">Admin</option>
           {me.isOwner && <option value="super_admin">Super Admin</option>}

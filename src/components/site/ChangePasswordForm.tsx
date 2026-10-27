@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { changeOwnPassword } from "@/lib/password.functions";
 import { withTimeout } from "@/lib/async";
 import { PasswordInput } from "@/components/site/PasswordInput";
+import { passwordProblem } from "@/lib/password-policy";
 
 /** 0–4 rough strength score, shown as a meter under the new-password field. */
 export function passwordStrength(pw: string): { score: number; label: string } {
@@ -34,7 +35,8 @@ export function ChangePasswordForm({ email, minLen, onDone }: { email: string | 
     const currentPassword = String(fd.get("current") ?? "");
     const password = String(fd.get("password") ?? "");
     if (!currentPassword) return setError("Enter your current password.");
-    if (password.length < minLen) return setError(`Password must be at least ${minLen} characters.`);
+    const weak = password.length < minLen ? `Password must be at least ${minLen} characters.` : passwordProblem(password, email);
+    if (weak) return setError(weak);
     if (password !== String(fd.get("confirm") ?? "")) return setError("The two passwords don't match.");
     if (password === currentPassword) return setError("Choose a password you haven't used before.");
     setLoading(true);

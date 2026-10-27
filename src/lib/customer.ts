@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PASSWORD_MAX, passwordProblem } from "./password-policy";
 import { phoneCountryError } from "@/config/countries";
 
 /** Turns "+254 (700) 000-111" into "+254700000111"; numbers without a leading + are left as digits only. */
@@ -32,9 +33,13 @@ export const signupSchema = z
   .object({
     ...detailsShape,
     email: z.string().trim().toLowerCase().email("Enter a valid email address").max(254),
-    password: z.string().min(8, "Password must be at least 8 characters").max(128),
+    password: z.string().max(PASSWORD_MAX),
   })
-  .superRefine(checkPhoneMatchesCountry);
+  .superRefine(checkPhoneMatchesCountry)
+  .superRefine((v, ctx) => {
+    const problem = passwordProblem(v.password, v.email);
+    if (problem) ctx.addIssue({ code: z.ZodIssueCode.custom, message: problem, path: ["password"] });
+  });
 
 /** Only follow redirects that stay on this site. */
 export function safeRedirect(value: unknown): string | undefined {

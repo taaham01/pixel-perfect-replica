@@ -8,6 +8,7 @@ import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { cn } from "@/lib/utils";
 import { PasswordInput } from "@/components/site/PasswordInput";
+import { PASSWORD_HINT, PASSWORD_MIN, passwordProblem } from "@/lib/password-policy";
 
 const t = `Choose a New Password — ${site.name}`;
 
@@ -49,7 +50,8 @@ function ResetPassword() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const password = String(fd.get("password") ?? "");
-    if (password.length < 8) return setError("Password must be at least 8 characters.");
+    const weak = passwordProblem(password);
+    if (weak) return setError(weak);
     if (password !== String(fd.get("confirm") ?? "")) return setError("The two passwords don't match.");
     setLoading(true);
     setError(null);
@@ -111,8 +113,8 @@ function ResetPassword() {
   return (
     <AuthShell eyebrow="Password reset" title="Choose a new password" subtitle="Pick a password you haven't used here before.">
       <form onSubmit={onSubmit} className="grid gap-4">
-        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">New password</span><PasswordInput name="password" required minLength={8} maxLength={128} autoComplete="new-password" className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">At least 8 characters.</span></label>
-        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Confirm new password</span><PasswordInput name="confirm" required minLength={8} maxLength={128} autoComplete="new-password" className={fieldCls} /></label>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">New password</span><PasswordInput name="password" required minLength={PASSWORD_MIN} maxLength={128} autoComplete="new-password" className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">{PASSWORD_HINT}</span></label>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Confirm new password</span><PasswordInput name="confirm" required minLength={PASSWORD_MIN} maxLength={128} autoComplete="new-password" className={fieldCls} /></label>
         {error && <p className="rounded-sm bg-crimson/10 p-3 text-sm text-crimson" role="alert">{error}</p>}
         <button disabled={loading} className={cn(btn({ variant: "primary" }), "w-full")}>{loading && <Loader2 className="h-4 w-4 animate-spin" />} Update password</button>
       </form>

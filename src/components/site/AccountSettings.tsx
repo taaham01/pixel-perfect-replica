@@ -22,6 +22,7 @@ import {
 } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 import { useCustomer } from "@/hooks/use-customer";
+import { PASSWORD_MIN } from "@/lib/password-policy";
 
 export const SETTINGS_TABS = ["admin", "profile", "security", "preferences", "notifications", "privacy"] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
@@ -83,7 +84,7 @@ export function AccountSettings({ userId, email, isStaff, showAdmin = false, tab
       <div className={cn("grid min-w-0 content-start gap-6", dialog ? "md:pl-6" : "lg:col-span-9")}>
         {tab === "admin" && <AdminTab userId={userId} />}
         {tab === "profile" && <ProfileTab userId={userId} email={email} />}
-        {tab === "security" && <SecurityTab email={email} minLen={isStaff ? 10 : 8} />}
+        {tab === "security" && <SecurityTab email={email} minLen={PASSWORD_MIN} />}
         {tab === "preferences" && <PreferencesTab />}
         {tab === "notifications" && <NotificationsTab />}
         {tab === "privacy" && <PrivacyTab userId={userId} email={email} isStaff={isStaff} />}

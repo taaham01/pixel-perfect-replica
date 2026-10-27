@@ -10,6 +10,7 @@ import { fieldCls } from "@/components/site/vehicles";
 import { authErrorMessage, safeRedirect, signupSchema } from "@/lib/customer";
 import { cn } from "@/lib/utils";
 import { PasswordInput } from "@/components/site/PasswordInput";
+import { PASSWORD_HINT, PASSWORD_MIN } from "@/lib/password-policy";
 
 const t = `Create Account — ${site.name}`;
 
@@ -85,7 +86,7 @@ function Signup() {
           <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Phone / WhatsApp <span className="text-crimson">*</span></span><input name="phone" type="tel" required autoComplete="tel" placeholder={dial ? `${dial} …` : "+254 700 000000"} maxLength={30} className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">Include the country code{dial ? ` (${dial})` : ""}. Our team checks it and approves your account before you can book.</span></label>
         </div>
         <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Email <span className="text-crimson">*</span></span><input name="email" type="email" required autoComplete="email" maxLength={254} className={fieldCls} /></label>
-        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password <span className="text-crimson">*</span></span><PasswordInput name="password" required minLength={8} maxLength={128} autoComplete="new-password" className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">At least 8 characters.</span></label>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password <span className="text-crimson">*</span></span><PasswordInput name="password" required minLength={PASSWORD_MIN} maxLength={128} autoComplete="new-password" className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">{PASSWORD_HINT}</span></label>
         {error && <p className="rounded-sm bg-crimson/10 p-3 text-sm text-crimson" role="alert">{error}</p>}
         <button disabled={loading} className={cn(btn({ variant: "primary" }), "w-full")}>{loading && <Loader2 className="h-4 w-4 animate-spin" />} Create account</button>
         <p className="text-center text-xs text-muted-foreground">By signing up you agree to our <Link to="/terms" className="underline">Terms</Link> and <Link to="/privacy" className="underline">Privacy Policy</Link>.</p>

@@ -9,6 +9,7 @@ import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { cn } from "@/lib/utils";
 import { PasswordInput } from "@/components/site/PasswordInput";
+import { PASSWORD_HINT, PASSWORD_MIN, passwordProblem } from "@/lib/password-policy";
 
 export const Route = createFileRoute("/admin/setup")({
   head: () => ({
@@ -50,6 +51,8 @@ function StaffSignup() {
     if (step.name !== "form") return;
     const fd = new FormData(e.currentTarget);
     const password = String(fd.get("password"));
+    const weak = passwordProblem(password, String(fd.get("email") ?? ""));
+    if (weak) { setError(weak); return; }
     if (password !== String(fd.get("confirm"))) { setError("Passwords do not match."); return; }
     const addr = email.trim().toLowerCase();
     setLoading(true); setError(null);
@@ -107,8 +110,8 @@ function StaffSignup() {
     <AuthCard title="Create your staff account" subtitle="New accounts stay locked until the owner approves them.">
       <form onSubmit={onSignup} className="grid gap-4">
         <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Email</span><input name="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={fieldCls} /></label>
-        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password (min. 10 characters)</span><PasswordInput name="password" minLength={10} required autoComplete="new-password" className={fieldCls} /></label>
-        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Confirm password</span><PasswordInput name="confirm" minLength={10} required autoComplete="new-password" className={fieldCls} /></label>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Password</span><PasswordInput name="password" minLength={PASSWORD_MIN} required autoComplete="new-password" className={fieldCls} /><span className="mt-1 block text-xs text-muted-foreground">{PASSWORD_HINT}</span></label>
+        <label className="block"><span className="eyebrow mb-2 block text-muted-foreground">Confirm password</span><PasswordInput name="confirm" minLength={PASSWORD_MIN} required autoComplete="new-password" className={fieldCls} /></label>
         {owner ? (
           <p className="flex items-center gap-2 rounded-sm border border-champagne/50 bg-champagne/10 p-3 text-sm"><Crown className="h-4 w-4 text-champagne" /> Owner account: you'll confirm it from your inbox.</p>
         ) : (

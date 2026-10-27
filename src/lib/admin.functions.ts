@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { strongPasswordSchema } from "./password-policy";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { OWNER_EMAIL, isOwnerEmail, isPrimaryOwnerEmail } from "@/config/staff";
 
 type Role = "super_admin" | "inventory_manager";
 const roleSchema = z.enum(["super_admin", "inventory_manager"]);
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
-const passwordSchema = z.string().min(10, "Password must be at least 10 characters").max(128);
+const passwordSchema = strongPasswordSchema;
 
 async function getAdmin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
