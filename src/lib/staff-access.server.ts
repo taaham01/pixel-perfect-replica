@@ -29,8 +29,22 @@ function sameBytes(a: Uint8Array, b: Uint8Array) {
   return diff === 0;
 }
 
-/** Constant-time check of the staff sign-up access password. */
+/** The password the owner set in Settings (stored as a bcrypt hash). null = none set, or the database can't be asked. */
+async function checkOwnerSetPassword(input: string): Promise<boolean | null> {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.rpc("verify_staff_access", { _input: input });
+    if (error) return null;
+    return typeof data === "boolean" ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Check of the staff sign-up access password. The owner's Settings password wins; then the secret; then the built-in hash. */
 export async function isValidStaffAccess(input: string) {
+  const ownerSet = await checkOwnerSetPassword(input);
+  if (ownerSet !== null) return ownerSet;
   const secret = process.env["STAFF_SIGNUP_PASSWORD"];
   if (secret) {
     const [a, b] = await Promise.all([sha256(input), sha256(secret)]);

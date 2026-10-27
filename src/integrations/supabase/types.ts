@@ -446,6 +446,10 @@ export type Database = {
           user_id: string
         }[]
       }
+      is_primary_owner: { Args: { _user_id: string }; Returns: boolean }
+      set_staff_access_password: { Args: { _account_password: string; _new_password: string }; Returns: string }
+      staff_access_password_changed_at: { Args: never; Returns: string | null }
+      verify_staff_access: { Args: { _input: string }; Returns: boolean | null }
       has_perm: { Args: { _perm: string; _user_id: string }; Returns: boolean }
       my_inquiries: {
         Args: never

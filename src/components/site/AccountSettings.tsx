@@ -9,6 +9,7 @@ import { dialCodeFor } from "@/config/countries";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { ChangePasswordForm } from "@/components/site/ChangePasswordForm";
+import { OwnerAccessPassword } from "@/components/site/OwnerAccessPassword";
 import { PasswordInput } from "@/components/site/PasswordInput";
 import { ApprovalPending } from "@/components/site/ApprovalStatus";
 import { Switch } from "@/components/ui/switch";
@@ -309,6 +310,7 @@ function SecurityTab({ email, minLen }: { email: string; minLen: number }) {
       <Card title="Change password" description="You'll need your current password. After changing it we recommend signing out of your other devices.">
         <ChangePasswordForm email={email} minLen={minLen} />
       </Card>
+      <OwnerAccessPassword email={email} />
       <Card title="Sessions" description="Where your account is signed in.">
         <dl className="divide-y divide-border text-sm">
           {rows.map(([k, v]) => <div key={k} className="flex justify-between gap-4 py-3"><dt className="text-muted-foreground">{k}</dt><dd className="break-words text-right font-medium">{v}</dd></div>)}
