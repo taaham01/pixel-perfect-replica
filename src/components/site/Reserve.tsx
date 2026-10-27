@@ -58,7 +58,7 @@ export function useReservations() {
   return {
     ready: ready && (!user || (!details.isLoading && !mine.isLoading)),
     signedIn: !!user,
-    approved: !!d && !!d.phone && d.phoneVerified,
+    approved: !!d && d.phoneVerified, // approval by an admin is all that is needed (same rule as the database)
     mine: mine.data ?? new Map<string, { id: string; vehicle_id: string; status: string }>(),
     reserve,
   };

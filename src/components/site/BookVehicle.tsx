@@ -144,7 +144,7 @@ export function BookVehicle({ vehicleId, vehicleName, vehicleStatus }: { vehicle
 
   const d = details.data;
   // Customers can book once our team has approved their account (approval is stored as phone_verified).
-  if (!d || !d.phone || !d.phoneVerified) return <ApprovalPending phone={d?.phone} className="mt-8" />;
+  if (!d || !d.phoneVerified) return <ApprovalPending phone={d?.phone} className="mt-8" />;
 
   return (
     <div className={shell}>
