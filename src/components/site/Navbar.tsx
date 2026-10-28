@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
 import { btn } from "./primitives";
 import { UserMenu } from "./UserMenu";
+import { NotificationBell } from "./Notifications";
 import { NavArrows } from "./NavArrows";
 
 export function Navbar() {
@@ -41,8 +42,10 @@ export function Navbar() {
           <a href={whatsappLink()} target="_blank" rel="noreferrer" className={btn({ variant: "ghostLight", size: "sm" })}>
             <MessageCircle className="h-4 w-4" /> WhatsApp Us
           </a>
+          <NotificationBell />
           <UserMenu />
         </div>
+        <NotificationBell className="ml-auto mr-1 lg:hidden" />
         <button onClick={() => setOpen((o) => !o)} className="relative h-10 w-10 lg:hidden" aria-label="Toggle menu" aria-expanded={open}>
           <span className={cn("absolute left-2 right-2 h-0.5 bg-ink-foreground transition-all duration-300", open ? "top-1/2 rotate-45" : "top-[14px]")} />
           <span className={cn("absolute left-2 right-2 top-1/2 h-0.5 bg-ink-foreground transition-opacity", open && "opacity-0")} />

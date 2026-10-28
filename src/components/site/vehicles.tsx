@@ -8,7 +8,8 @@ import {
 } from "@/data/vehicles";
 import { cn } from "@/lib/utils";
 import { btn } from "./primitives";
-import { ReserveOnCard } from "./Reserve";
+import { HoldTag, ReserveOnCard } from "./Reserve";
+import { isUnderProcess } from "@/lib/bookings";
 
 const statusLabel = { available: "Available", reserved: "Reserved", sold: "Sold" } as const;
 
@@ -36,7 +37,7 @@ export function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
             className={cn("h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]", sold && "grayscale-[60%]")} />
         ) : <NoPhoto />}
         <span className="absolute left-3 top-3 rounded-sm bg-ink/85 px-2 py-1 font-mono text-[0.68rem] tracking-wider text-ink-foreground backdrop-blur">#{v.stockId}</span>
-        <StatusBadge status={v.status} className="absolute right-3 top-3" />
+        {isUnderProcess(v) ? <HoldTag vehicleId={v.id} className="absolute right-3 top-3" /> : <StatusBadge status={v.status} className="absolute right-3 top-3" />}
       </Link>
       <div className="flex flex-1 flex-col p-5">
         <div>
@@ -57,7 +58,7 @@ export function VehicleCard({ vehicle: v }: { vehicle: Vehicle }) {
           <Link to="/vehicles/$slug" params={{ slug }} className={cn(btn({ variant: "outline", size: "sm" }), sold && "col-span-2")}>View Details</Link>
           {!sold && <Link to="/vehicles/$slug" params={{ slug }} hash="inquiry" className={btn({ variant: "ink", size: "sm" })}>Get Quote</Link>}
         </div>
-        {!sold && <ReserveOnCard vehicleId={v.id} status={v.status} name={`${v.year} ${v.make} ${v.model}`} />}
+        {!sold && <ReserveOnCard vehicleId={v.id} status={v.status} holdUntil={v.holdUntil} name={`${v.year} ${v.make} ${v.model}`} />}
       </div>
     </article>
   );

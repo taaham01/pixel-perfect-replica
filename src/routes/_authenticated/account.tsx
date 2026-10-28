@@ -10,7 +10,9 @@ import { fieldCls } from "@/components/site/vehicles";
 import { detailsSchema } from "@/lib/customer";
 import { fetchCustomerDetails } from "@/lib/customer-details";
 import { ApprovalPending } from "@/components/site/ApprovalStatus";
-import { CONTACT_METHODS, bookingStatusInfo } from "@/components/site/BookVehicle";
+import { CONTACT_METHODS, bookingStatusFor } from "@/components/site/BookVehicle";
+import { NotificationList } from "@/components/site/Notifications";
+import { expireOverdueBookings, timeLeft, useNow } from "@/lib/bookings";
 import { AskQuestion } from "@/components/site/AskQuestion";
 import { vehiclePrice, mapVehicle } from "@/data/vehicles";
 import { cn } from "@/lib/utils";
@@ -31,9 +33,11 @@ function Account() {
     queryFn: () => fetchCustomerDetails(user.id),
   });
 
+  const now = useNow(30_000);
   const bookings = useQuery({
     queryKey: ["my-bookings"],
     queryFn: async () => {
+      await expireOverdueBookings();
       const { data, error } = await supabase.from("bookings").select("*, vehicles(*)").order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -142,7 +146,7 @@ function Account() {
         <div className="space-y-12 lg:col-span-7">
           <div>
           <h2 id="bookings" className="scroll-mt-28 text-xl font-bold">My bookings &amp; reservations</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Book a car from its page. Once our team confirms, it's reserved in your name.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Book a car from its page. It shows <strong>Pending approval</strong> until our team approves it — then it's reserved in your name.</p>
           <div className="mt-4 grid gap-3">
             {bookings.isLoading && <p className="rounded-sm border border-border p-4 text-muted-foreground">Loading…</p>}
             {bookings.data?.length === 0 && (
@@ -154,7 +158,8 @@ function Account() {
             )}
             {bookings.data?.map((b) => {
               const v = b.vehicles ? mapVehicle(b.vehicles) : null;
-              const info = bookingStatusInfo[b.status] ?? bookingStatusInfo.pending!;
+              const info = bookingStatusFor(b);
+              const left = b.status === "pending" ? timeLeft(b.expires_at, now) : null;
               const active = b.status === "pending" || b.status === "confirmed";
               return (
                 <article key={b.id} className={cn("flex gap-4 rounded-sm border p-4", active ? "border-border bg-card" : "border-border/60 opacity-80")}>
@@ -170,6 +175,7 @@ function Account() {
                       <span className={cn("rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", info.tone)}>{info.label}</span>
                     </div>
                     <p className="mt-2 text-sm text-muted-foreground">{info.hint}</p>
+                    {b.status === "pending" && <p className="mt-1 text-xs font-semibold text-crimson">Approval time left: {left ? left.label : "time is up — it will be cancelled shortly"}</p>}
                     <p className="mt-1 text-xs text-muted-foreground">
                       Booked {new Date(b.created_at).toLocaleDateString()}
                       {b.destination ? ` · To ${b.destination}` : ""}
@@ -187,6 +193,7 @@ function Account() {
             })}
           </div>
           </div>
+          <NotificationList />
           <AskQuestion name={details?.fullName ?? ""} email={user.email} phone={details?.phone} country={details?.country} />
         </div>
       </section>

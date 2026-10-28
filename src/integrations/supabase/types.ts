@@ -55,6 +55,10 @@ export type Database = {
           id: string
           message: string | null
           staff_note: string | null
+          expires_at: string | null
+          approved_at: string | null
+          approved_by: string | null
+          cancel_reason: string | null
           status: Database["public"]["Enums"]["booking_status"]
           updated_at: string
           user_id: string
@@ -67,6 +71,10 @@ export type Database = {
           id?: string
           message?: string | null
           staff_note?: string | null
+          expires_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          cancel_reason?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
           user_id: string
@@ -79,6 +87,10 @@ export type Database = {
           id?: string
           message?: string | null
           staff_note?: string | null
+          expires_at?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          cancel_reason?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
           user_id?: string
@@ -258,6 +270,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          read_at: string | null
+          title: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind: string
+          read_at?: string | null
+          title: string
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -329,6 +374,24 @@ export type Database = {
           },
         ]
       }
+      vehicle_watchers: {
+        Row: {
+          created_at: string
+          user_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+          vehicle_id?: string
+        }
+        Relationships: []
+      }
       vehicles: {
         Row: {
           auction_grade: string | null
@@ -342,6 +405,7 @@ export type Database = {
           engine_cc: number | null
           exterior_color: string | null
           featured: boolean
+          hold_until: string | null
           fuel: string | null
           id: string
           interior_color: string | null
@@ -376,6 +440,7 @@ export type Database = {
           engine_cc?: number | null
           exterior_color?: string | null
           featured?: boolean
+          hold_until?: string | null
           fuel?: string | null
           id?: string
           interior_color?: string | null
@@ -410,6 +475,7 @@ export type Database = {
           engine_cc?: number | null
           exterior_color?: string | null
           featured?: boolean
+          hold_until?: string | null
           fuel?: string | null
           id?: string
           interior_color?: string | null
@@ -439,6 +505,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      expire_pending_bookings: { Args: { _vehicle_id?: string }; Returns: number }
+      extend_booking: { Args: { _booking_id: string }; Returns: string }
       get_customer_phones: {
         Args: { _user_ids: string[] }
         Returns: {

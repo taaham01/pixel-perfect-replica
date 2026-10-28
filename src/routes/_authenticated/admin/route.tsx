@@ -36,10 +36,10 @@ function AdminLayout() {
     queryKey: ["admin", "inquiries-new"], staleTime: 30_000, refetchInterval: 60_000,
     queryFn: async () => (await supabase.from("inquiries").select("id", { count: "exact", head: true }).eq("status", "new")).count ?? 0,
   });
-  // Active reservations the team hasn't messaged yet.
+  // Bookings waiting for approval (each one auto-cancels when its approval time runs out).
   const pendingBookings = useQuery({
     queryKey: ["admin", "bookings-pending"], staleTime: 30_000, refetchInterval: 60_000, enabled: admin.perms.bookings,
-    queryFn: async () => (await supabase.from("bookings").select("id", { count: "exact", head: true }).in("status", ["pending", "confirmed"]).is("staff_note", null)).count ?? 0,
+    queryFn: async () => (await supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "pending").gt("expires_at", new Date().toISOString())).count ?? 0,
   });
   const links = [
     { to: "/admin/manage", label: "Manage everything", icon: Wrench },
@@ -50,7 +50,7 @@ function AdminLayout() {
     { to: "/admin/vehicles/new", label: "Add vehicle", icon: PlusCircle },
     { to: "/admin/sold", label: "Sold vehicles", icon: CircleDollarSign },
     { to: "/admin/import", label: "CSV import", icon: FileUp },
-    ...(admin.perms.bookings ? [{ to: "/admin/bookings", label: "Bookings", icon: CalendarCheck, badge: pendingBookings.data ?? 0 }] : []),
+    ...(admin.perms.bookings ? [{ to: "/admin/bookings", label: "Bookings & approvals", icon: CalendarCheck, badge: pendingBookings.data ?? 0 }] : []),
     ...(admin.perms.customers ? [{ to: "/admin/customers", label: "Customers", icon: UserRound }] : []),
     ...(admin.isSuper ? [{ to: "/admin/admins", label: "Manage staff", icon: Users }, { to: "/admin/activity", label: "Activity log", icon: Activity }] : []),
   ];

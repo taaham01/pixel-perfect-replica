@@ -1,11 +1,13 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookmarkCheck, CalendarCheck, Loader2 } from "lucide-react";
+import { BookmarkCheck, CalendarCheck, Clock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/hooks/use-customer";
 import { fetchCustomerDetails } from "@/lib/customer-details";
 import { cn } from "@/lib/utils";
+import { APPROVAL_HOURS, bookingErrorMessage, isUnderProcess, useNow } from "@/lib/bookings";
+import { NotifyMeButton, UnderProcessTag } from "./WatchCar";
 import { btn } from "./primitives";
 
 /**
@@ -40,16 +42,12 @@ export function useReservations() {
         user_id: user.id, vehicle_id: input.vehicleId,
         destination: input.destination?.trim() || null, contact_method: input.contactMethod ?? "whatsapp", message: input.message?.trim() || null,
       });
-      if (error) {
-        if (error.message.includes("active reservations") || error.message.includes("reserved by another")) throw new Error(error.message);
-        if (error.code === "23505") throw new Error("You've already reserved this car.");
-        throw new Error("We couldn't reserve this car. It may have just been reserved by someone else.");
-      }
+      if (error) throw new Error(bookingErrorMessage(error));
     },
     onSuccess: async () => {
-      toast.success("Car reserved for you. It's now in My bookings — our team will contact you shortly.");
+      toast.success(`Booking sent — pending approval. Our team has ${APPROVAL_HOURS} hours to approve it.`);
       await qc.invalidateQueries();
-      await router.invalidate(); // refresh car lists so the Reserved badge shows
+      await router.invalidate(); // refresh car lists so the Under process tag shows
     },
     onError: async (e: Error) => { toast.error(e.message); await qc.invalidateQueries(); },
   });
@@ -64,29 +62,43 @@ export function useReservations() {
   };
 }
 
-/** Small reserve control for listing cards: only for signed-in, approved customers. */
-export function ReserveOnCard({ vehicleId, status, name }: { vehicleId: string; status: string; name: string }) {
+/** Booking control for listing cards. Under-process cars offer "Notify me" to everyone else. */
+export function ReserveOnCard({ vehicleId, status, holdUntil, name }: { vehicleId: string; status: string; holdUntil?: string | null; name: string }) {
   const r = useReservations();
-  if (!r.ready || !r.signedIn || !r.approved) return null;
+  const now = useNow(60_000);
+  if (!r.ready) return null;
 
-  if (r.mine.has(vehicleId)) {
+  const mine = r.mine.get(vehicleId);
+  if (mine) {
+    const pending = mine.status === "pending";
     return (
-      <Link to="/account" hash="bookings" className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-sm bg-emerald-600/12 px-3 py-2 text-xs font-bold uppercase tracking-wider text-emerald-800 hover:bg-emerald-600/20">
-        <BookmarkCheck className="h-3.5 w-3.5" /> Reserved by you
+      <Link to="/account" hash="bookings" className={cn("mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-sm px-3 py-2 text-xs font-bold uppercase tracking-wider",
+        pending ? "bg-champagne/30 text-foreground hover:bg-champagne/45" : "bg-emerald-600/12 text-emerald-800 hover:bg-emerald-600/20")}>
+        {pending ? <><Clock className="h-3.5 w-3.5" /> Pending approval</> : <><BookmarkCheck className="h-3.5 w-3.5" /> Reserved for you</>}
       </Link>
     );
   }
-  if (status !== "available") return null;
+  if (isUnderProcess({ status, holdUntil }, now)) return <NotifyMeButton vehicleId={vehicleId} compact className="mt-3 w-full" />;
+  if (status !== "available" || !r.signedIn || !r.approved) return null;
 
   const busy = r.reserve.isPending && r.reserve.variables?.vehicleId === vehicleId;
   return (
     <button
       type="button"
       disabled={r.reserve.isPending}
-      onClick={() => { if (window.confirm(`Reserve the ${name}? It will be held for you and our team will contact you.`)) r.reserve.mutate({ vehicleId }); }}
+      onClick={() => { if (window.confirm(`Book the ${name}? It will be held for you while our team approves the booking (within ${APPROVAL_HOURS} hours).`)) r.reserve.mutate({ vehicleId }); }}
       className={cn(btn({ variant: "primary", size: "sm" }), "mt-3 w-full")}
     >
-      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarCheck className="h-4 w-4" />} Reserve this car
+      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarCheck className="h-4 w-4" />} Book this car
     </button>
   );
+}
+
+/** Image tag for a car on hold: "Pending approval" for the customer who booked it, "Under process" for everyone else. */
+export function HoldTag({ vehicleId, className }: { vehicleId: string; className?: string }) {
+  const r = useReservations();
+  if (r.mine.get(vehicleId)?.status === "pending") {
+    return <span className={cn("inline-flex items-center gap-1 rounded-sm bg-champagne px-2 py-1 text-[0.68rem] font-bold uppercase tracking-wider text-ink", className)}><Clock className="h-3 w-3" /> Pending approval</span>;
+  }
+  return <UnderProcessTag className={className} />;
 }

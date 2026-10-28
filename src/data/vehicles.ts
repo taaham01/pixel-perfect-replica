@@ -47,6 +47,8 @@ export interface Vehicle {
   status: VehicleStatus;
   publishState: PublishState;
   featured: boolean;
+  /** Set while a customer's booking waits for staff approval (car shows "Under process"). */
+  holdUntil: string | null;
   coverUrl: string | null;
   thumbUrl: string | null;
   createdAt: string;
@@ -71,7 +73,7 @@ export function mapVehicle(r: VehicleRow): Vehicle {
     engineCc: r.engine_cc, transmission: r.transmission, fuel: r.fuel, bodyType: r.body_type, drivetrain: r.drivetrain,
     exteriorColor: r.exterior_color, interiorColor: r.interior_color, chassisNumber: r.chassis_number,
     auctionGrade: r.auction_grade, description: r.description, location: r.location, shippingInfo: r.shipping_info,
-    status: r.status, publishState: r.publish_state, featured: r.featured,
+    status: r.status, publishState: r.publish_state, featured: r.featured, holdUntil: r.hold_until ?? null,
     coverUrl: imageUrl(r.primary_image_path), thumbUrl: imageUrl(r.primary_thumb_path ?? r.primary_image_path),
     createdAt: r.created_at, updatedAt: r.updated_at,
   };

@@ -9,6 +9,8 @@ import { InquiryForm } from "@/components/site/forms";
 import { BookVehicle } from "@/components/site/BookVehicle";
 import { vehicleWhatsappMessage } from "@/components/site/WhatsAppButton";
 import { cn } from "@/lib/utils";
+import { isUnderProcess } from "@/lib/bookings";
+import { HoldTag } from "@/components/site/Reserve";
 
 export const Route = createFileRoute("/vehicles/$slug")({
   loader: async ({ params }) => {
@@ -83,8 +85,10 @@ function VehicleDetail() {
               <p className="eyebrow text-muted-foreground">{sold ? "Sold" : "FOB Price"}</p>
               <p className={cn("text-4xl font-bold tracking-tight", sold && "text-muted-foreground line-through decoration-2")}>{vehiclePrice(v)}</p>
             </div>
-            <span className={cn("rounded-sm px-2.5 py-1 text-xs font-bold uppercase tracking-wider",
-              v.status === "available" ? "bg-whatsapp/15 text-foreground" : sold ? "bg-crimson text-ink-foreground" : "bg-champagne text-ink")}>{v.status}</span>
+            {isUnderProcess(v) ? <HoldTag vehicleId={v.id} /> : (
+              <span className={cn("rounded-sm px-2.5 py-1 text-xs font-bold uppercase tracking-wider",
+                v.status === "available" ? "bg-whatsapp/15 text-foreground" : sold ? "bg-crimson text-ink-foreground" : "bg-champagne text-ink")}>{v.status}</span>
+            )}
           </div>
           {sold && <p className="mt-4 rounded-sm border border-crimson/30 bg-crimson/5 p-4 text-sm">This vehicle has been sold and is no longer available. We can source a similar one for you.</p>}
           <div className="mt-6">
@@ -101,7 +105,7 @@ function VehicleDetail() {
               : <a href="#inquiry" className={btn({ variant: "primary", size: "lg" })}>Request Export Quote</a>}
             <a href={wa} target="_blank" rel="noreferrer" className={btn({ variant: "whatsapp", size: "lg" })}><MessageCircle className="h-4 w-4" /> Chat on WhatsApp</a>
           </div>
-          {!sold && <BookVehicle vehicleId={v.id} vehicleName={name} vehicleStatus={v.status} />}
+          {!sold && <BookVehicle vehicleId={v.id} vehicleName={name} vehicleStatus={v.status} holdUntil={v.holdUntil} />}
         </div>
       </section>
 
