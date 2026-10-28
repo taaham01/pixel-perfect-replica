@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, ArrowRight, Bell, CalendarCheck, Car, Check, CircleDollarSign, Clock, Copy, Download, FileUp, Inbox, LayoutDashboard, Loader2, LogOut, Mail, MonitorSmartphone, PlusCircle, ShieldCheck, Trash2, UserCheck, UserRound, Users, Wrench, type LucideIcon } from "lucide-react";
+import { Activity, ArrowRight, Bell, CalendarCheck, Car, Check, CircleDollarSign, Clock, Copy, Download, FileUp, Hourglass, Inbox, LayoutDashboard, Loader2, LogOut, Mail, MonitorSmartphone, PlusCircle, ShieldCheck, Trash2, UserCheck, UserRound, Users, Wrench, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { countries, site } from "@/config/site";
@@ -96,7 +96,7 @@ export function AccountSettings({ userId, email, isStaff, showAdmin = false, tab
 
 /* ───────────────────────── Admin panel (staff only) ───────────────────────── */
 
-type AdminPath = "/admin" | "/admin/approvals" | "/admin/inquiries" | "/admin/vehicles" | "/admin/vehicles/new" | "/admin/sold" | "/admin/import" | "/admin/bookings" | "/admin/customers" | "/admin/admins" | "/admin/activity";
+type AdminPath = "/admin" | "/admin/approvals" | "/admin/inquiries" | "/admin/vehicles" | "/admin/vehicles/new" | "/admin/sold" | "/admin/import" | "/admin/booking-approvals" | "/admin/bookings" | "/admin/customers" | "/admin/admins" | "/admin/activity";
 type AdminLink = { to: AdminPath; label: string; hint: string; icon: LucideIcon; need?: "super" | "bookings" | "customers" };
 const ADMIN_LINKS: { group: string; links: AdminLink[] }[] = [
   { group: "Overview", links: [{ to: "/admin", label: "Dashboard", hint: "Sales, stock and activity at a glance", icon: LayoutDashboard, need: "super" }] },
@@ -109,7 +109,8 @@ const ADMIN_LINKS: { group: string; links: AdminLink[] }[] = [
   { group: "Customers", links: [
     { to: "/admin/approvals", label: "Customer approvals", hint: "Check new sign-ups and approve them to book", icon: UserCheck },
     { to: "/admin/inquiries", label: "Inquiries", hint: "Messages from the website's forms", icon: Inbox },
-    { to: "/admin/bookings", label: "Bookings", hint: "Reservation requests from customers", icon: CalendarCheck, need: "bookings" },
+    { to: "/admin/booking-approvals", label: "Booking approvals", hint: "Approve customers' car bookings before the 24-hour timer runs out", icon: Hourglass, need: "bookings" },
+    { to: "/admin/bookings", label: "All bookings", hint: "Every booking: pending, reserved, sold and cancelled", icon: CalendarCheck, need: "bookings" },
     { to: "/admin/customers", label: "Customers", hint: "Accounts and contact details", icon: UserRound, need: "customers" },
   ] },
   { group: "Team", links: [

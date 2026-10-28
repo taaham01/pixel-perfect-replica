@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Car, CircleDollarSign, FileUp, PlusCircle, Users } from "lucide-react";
+import { ArrowRight, Car, CircleDollarSign, FileUp, Hourglass, PlusCircle, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { imageUrl, vehiclePrice, mapVehicle } from "@/data/vehicles";
 import { useAdmin } from "@/hooks/use-admin";
@@ -40,7 +40,13 @@ function Dashboard() {
       return data.map((r) => ({ ...mapVehicle(r), raw: r }));
     },
   });
+  // Bookings waiting for approval (same count as the sidebar badge).
+  const pendingBookings = useQuery({
+    queryKey: ["admin", "bookings-pending"], staleTime: 30_000, refetchInterval: 60_000,
+    queryFn: async () => (await supabase.from("bookings").select("id", { count: "exact", head: true }).eq("status", "pending").gt("expires_at", new Date().toISOString())).count ?? 0,
+  });
   const s = stats.data;
+  const awaiting = pendingBookings.data ?? 0;
   const cards = [
     { label: "Total vehicles", value: s?.total, to: "/admin/vehicles", search: {} },
     { label: "Available", value: s?.available, to: "/admin/vehicles", search: { status: "available" } },
@@ -57,9 +63,17 @@ function Dashboard() {
           <Link to="/admin/vehicles" className={btn({ variant: "outline", size: "sm" })}><Car className="h-4 w-4" /> Manage Inventory</Link>
           <Link to="/admin/sold" className={btn({ variant: "outline", size: "sm" })}><CircleDollarSign className="h-4 w-4" /> Sold Vehicles</Link>
           <Link to="/admin/import" className={btn({ variant: "outline", size: "sm" })}><FileUp className="h-4 w-4" /> Import CSV</Link>
+          <Link to="/admin/booking-approvals" className={btn({ variant: "outline", size: "sm" })}><Hourglass className="h-4 w-4" /> Booking Approvals{awaiting > 0 && <span className="rounded-full bg-crimson px-1.5 text-[10px] font-bold text-primary-foreground">{awaiting}</span>}</Link>
           {admin.isSuper && <Link to="/admin/admins" className={btn({ variant: "outline", size: "sm" })}><Users className="h-4 w-4" /> Manage Admins</Link>}
         </div>
       </div>
+
+      {awaiting > 0 && (
+        <Link to="/admin/booking-approvals" className="flex items-center justify-between gap-3 rounded-sm border border-crimson bg-crimson/5 p-4 transition-colors hover:bg-crimson/10">
+          <span className="flex items-center gap-3"><Hourglass className="h-5 w-5 text-crimson" /><span><span className="font-bold">{awaiting} booking{awaiting === 1 ? "" : "s"} waiting for approval.</span> <span className="text-sm text-muted-foreground">Approve within 24 hours or they cancel automatically.</span></span></span>
+          <span className="inline-flex items-center gap-1 text-sm font-semibold text-crimson">Review <ArrowRight className="h-4 w-4" /></span>
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((c) => (

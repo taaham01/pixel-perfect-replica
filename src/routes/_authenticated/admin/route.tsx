@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { listCustomerApprovals } from "@/lib/admin.functions";
-import { Activity, Wrench, UserCheck, Inbox, Car, CircleDollarSign, FileUp, CalendarCheck, LayoutDashboard, LogOut, Settings, UserRound, Menu, PlusCircle, Users, X } from "lucide-react";
+import { Activity, Hourglass, Wrench, UserCheck, Inbox, Car, CircleDollarSign, FileUp, CalendarCheck, LayoutDashboard, LogOut, Settings, UserRound, Menu, PlusCircle, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { Logo } from "@/components/site/Logo";
@@ -44,13 +44,14 @@ function AdminLayout() {
   const links = [
     { to: "/admin/manage", label: "Manage everything", icon: Wrench },
     { to: "/admin/approvals", label: "Customer approvals", icon: UserCheck, badge: waiting },
+    ...(admin.perms.bookings ? [{ to: "/admin/booking-approvals", label: "Booking approvals", icon: Hourglass, badge: pendingBookings.data ?? 0 }] : []),
     { to: "/admin/inquiries", label: "Inquiries", icon: Inbox, badge: newInquiries.data ?? 0 },
     ...(admin.isSuper ? [{ to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true }] : []),
     { to: "/admin/vehicles", label: "Inventory", icon: Car, exact: true },
     { to: "/admin/vehicles/new", label: "Add vehicle", icon: PlusCircle },
     { to: "/admin/sold", label: "Sold vehicles", icon: CircleDollarSign },
     { to: "/admin/import", label: "CSV import", icon: FileUp },
-    ...(admin.perms.bookings ? [{ to: "/admin/bookings", label: "Bookings & approvals", icon: CalendarCheck, badge: pendingBookings.data ?? 0 }] : []),
+    ...(admin.perms.bookings ? [{ to: "/admin/bookings", label: "All bookings", icon: CalendarCheck }] : []),
     ...(admin.perms.customers ? [{ to: "/admin/customers", label: "Customers", icon: UserRound }] : []),
     ...(admin.isSuper ? [{ to: "/admin/admins", label: "Manage staff", icon: Users }, { to: "/admin/activity", label: "Activity log", icon: Activity }] : []),
   ];
