@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Car, CheckCircle2, Inbox, Loader2, Lock, Mail, MessageCircle, Phone, PhoneCall, RotateCcw, Search, Send } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { formKindLabel, type FormKind } from "@/lib/inquiries";

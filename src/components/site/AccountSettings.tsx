@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "re
 import { Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Activity, ArrowRight, Bell, CalendarCheck, Car, Check, CircleDollarSign, Clock, Copy, Download, FileUp, Hourglass, Inbox, LayoutDashboard, Loader2, LogOut, Mail, MonitorSmartphone, PlusCircle, ShieldCheck, Trash2, UserCheck, UserRound, Users, Wrench, type LucideIcon } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { countries, site } from "@/config/site";
 import { dialCodeFor } from "@/config/countries";

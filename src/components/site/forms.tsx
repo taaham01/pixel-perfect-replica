@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { Check, Loader2 } from "lucide-react";
 import { countries } from "@/config/site";
 import { bodyTypes, commonMakes, fuels, transmissions } from "@/data/vehicles";

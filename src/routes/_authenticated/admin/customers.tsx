@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { decideCustomer, deleteAccount, listCustomers, updateCustomer } from "@/lib/admin.functions";
 import { useAdmin } from "@/hooks/use-admin";
 import { btn } from "@/components/site/primitives";

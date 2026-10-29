@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BellRing, Car, Check, Clock, Hourglass, Loader2, Mail, MessageCircle, Phone, TimerReset, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { listCustomerApprovals } from "@/lib/admin.functions";

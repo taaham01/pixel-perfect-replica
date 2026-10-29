@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { isPrimaryOwnerEmail } from "@/config/staff";
 import { passwordProblem, PASSWORD_HINT } from "@/lib/password-policy";

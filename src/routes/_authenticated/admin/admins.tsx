@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Crown, ShieldCheck, Trash2, UserMinus, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { createAdmin, decideStaffRequest, deleteAccount, listAdmins, listStaffPermissions, listStaffRequests, removeStaff, setAdminActive, setAdminRole, setStaffPermissions } from "@/lib/admin.functions";
 import { useAdmin } from "@/hooks/use-admin";
 import { btn } from "@/components/site/primitives";

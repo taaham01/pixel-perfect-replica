@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Clock, Loader2, MessageSquare, Send } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { askQuestion, myQuestions } from "@/lib/inquiries";
 import { cn } from "@/lib/utils";
 import { btn } from "./primitives";

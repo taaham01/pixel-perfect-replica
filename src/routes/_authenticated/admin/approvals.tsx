@@ -2,7 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Loader2, Mail, MessageCircle, Phone, RotateCcw, Search, UserCheck, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { decideCustomer, listCustomerApprovals } from "@/lib/admin.functions";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, Check, Copy, Loader2, LogOut, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { countries, site } from "@/config/site";
 import { PageHero, btn } from "@/components/site/primitives";

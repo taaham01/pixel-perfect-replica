@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, CheckCircle2, Clock, Hourglass, Loader2, Lock, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomer } from "@/hooks/use-customer";
 import { fetchCustomerDetails } from "@/lib/customer-details";

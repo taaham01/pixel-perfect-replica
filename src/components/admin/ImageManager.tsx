@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import { ArrowLeft, ArrowRight, ImagePlus, Loader2, RefreshCw, Replace, RotateCcw, Star, Trash2, X } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { imageUrl, MAX_IMAGES, type VehicleImageRow } from "@/data/vehicles";
 import { cn } from "@/lib/utils";

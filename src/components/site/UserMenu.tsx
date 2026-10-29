@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link, useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, Check, MessageSquare, ChevronDown, Copy, Crown, Gem, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { accountTypeLabel, useCustomer, type AccountType } from "@/hooks/use-customer";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";

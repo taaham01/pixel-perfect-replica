@@ -2,7 +2,7 @@ import { useMemo, useState, type ChangeEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Download, FileUp, Loader2, XCircle } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdmin } from "@/hooks/use-admin";
 import { dbErrorMessage, guessField, validateVehicle, vehicleFields } from "@/components/admin/fields";

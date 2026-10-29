@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Archive, ExternalLink, Loader2, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { commonMakes, type PublishState, type VehicleRow } from "@/data/vehicles";
 import { useAdmin } from "@/hooks/use-admin";

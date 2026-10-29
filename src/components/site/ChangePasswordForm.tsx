@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { btn } from "./primitives";
 import { fieldCls } from "./vehicles";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FlaskConical, Loader2, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { btn } from "@/components/site/primitives";
 import { countDemoCars, loadDemoCars, removeDemoCars } from "@/lib/demo-inventory";
 import { confirmDialog } from "@/components/site/ConfirmDialog";

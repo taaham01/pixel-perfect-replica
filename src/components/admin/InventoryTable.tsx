@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Search } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { supabase } from "@/integrations/supabase/client";
 import { formatMileage, imageUrl, vehiclePrice, type PublishState, type VehicleStatus } from "@/data/vehicles";
 import { useAdmin } from "@/hooks/use-admin";
