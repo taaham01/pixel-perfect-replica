@@ -70,9 +70,13 @@ export type Database = {
       }
       bookings: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
+          cancel_reason: string | null
           contact_method: string | null
           created_at: string
           destination: string | null
+          expires_at: string | null
           id: string
           message: string | null
           staff_note: string | null
@@ -82,9 +86,13 @@ export type Database = {
           vehicle_id: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancel_reason?: string | null
           contact_method?: string | null
           created_at?: string
           destination?: string | null
+          expires_at?: string | null
           id?: string
           message?: string | null
           staff_note?: string | null
@@ -94,9 +102,13 @@ export type Database = {
           vehicle_id: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cancel_reason?: string | null
           contact_method?: string | null
           created_at?: string
           destination?: string | null
+          expires_at?: string | null
           id?: string
           message?: string | null
           staff_note?: string | null
@@ -188,6 +200,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "inquiries_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          read_at: string | null
+          title: string
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind: string
+          read_at?: string | null
+          title: string
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_vehicle_id_fkey"
             columns: ["vehicle_id"]
             isOneToOne: false
             referencedRelation: "vehicles"
@@ -350,6 +403,32 @@ export type Database = {
           },
         ]
       }
+      vehicle_watchers: {
+        Row: {
+          created_at: string
+          user_id: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicle_watchers_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vehicles: {
         Row: {
           auction_grade: string | null
@@ -364,6 +443,7 @@ export type Database = {
           exterior_color: string | null
           featured: boolean
           fuel: string | null
+          hold_until: string | null
           id: string
           interior_color: string | null
           location: string | null
@@ -398,6 +478,7 @@ export type Database = {
           exterior_color?: string | null
           featured?: boolean
           fuel?: string | null
+          hold_until?: string | null
           id?: string
           interior_color?: string | null
           location?: string | null
@@ -432,6 +513,7 @@ export type Database = {
           exterior_color?: string | null
           featured?: boolean
           fuel?: string | null
+          hold_until?: string | null
           id?: string
           interior_color?: string | null
           location?: string | null
@@ -460,6 +542,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      booking_approval_window: { Args: never; Returns: string }
+      booking_system_change: { Args: never; Returns: boolean }
+      expire_pending_bookings: {
+        Args: { _vehicle_id?: string }
+        Returns: number
+      }
+      extend_booking: { Args: { _booking_id: string }; Returns: string }
       get_customer_phones: {
         Args: { _user_ids: string[] }
         Returns: {

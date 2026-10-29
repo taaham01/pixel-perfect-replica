@@ -11,9 +11,14 @@ const FALLBACK = {
 };
 
 const enc = new TextEncoder();
-const fromB64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+const fromB64 = (s: string): Uint8Array<ArrayBuffer> => {
+  const bin = atob(s);
+  const bytes = new Uint8Array(new ArrayBuffer(bin.length));
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+};
 
-async function pbkdf2(password: string, salt: Uint8Array, iterations: number) {
+async function pbkdf2(password: string, salt: Uint8Array<ArrayBuffer>, iterations: number) {
   const key = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveBits"]);
   return new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt, iterations }, key, 256));
 }
