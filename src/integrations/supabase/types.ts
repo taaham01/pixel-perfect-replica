@@ -47,6 +47,27 @@ export type Database = {
         }
         Relationships: []
       }
+      app_secrets: {
+        Row: {
+          name: string
+          secret_hash: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          name: string
+          secret_hash: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          name?: string
+          secret_hash?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           contact_method: string | null
@@ -55,10 +76,6 @@ export type Database = {
           id: string
           message: string | null
           staff_note: string | null
-          expires_at: string | null
-          approved_at: string | null
-          approved_by: string | null
-          cancel_reason: string | null
           status: Database["public"]["Enums"]["booking_status"]
           updated_at: string
           user_id: string
@@ -71,10 +88,6 @@ export type Database = {
           id?: string
           message?: string | null
           staff_note?: string | null
-          expires_at?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          cancel_reason?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
           user_id: string
@@ -87,10 +100,6 @@ export type Database = {
           id?: string
           message?: string | null
           staff_note?: string | null
-          expires_at?: string | null
-          approved_at?: string | null
-          approved_by?: string | null
-          cancel_reason?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
           user_id?: string
@@ -270,39 +279,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notifications: {
-        Row: {
-          body: string
-          created_at: string
-          id: string
-          kind: string
-          read_at: string | null
-          title: string
-          user_id: string
-          vehicle_id: string | null
-        }
-        Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          kind: string
-          read_at?: string | null
-          title: string
-          user_id: string
-          vehicle_id?: string | null
-        }
-        Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          kind?: string
-          read_at?: string | null
-          title?: string
-          user_id?: string
-          vehicle_id?: string | null
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -374,24 +350,6 @@ export type Database = {
           },
         ]
       }
-      vehicle_watchers: {
-        Row: {
-          created_at: string
-          user_id: string
-          vehicle_id: string
-        }
-        Insert: {
-          created_at?: string
-          user_id: string
-          vehicle_id: string
-        }
-        Update: {
-          created_at?: string
-          user_id?: string
-          vehicle_id?: string
-        }
-        Relationships: []
-      }
       vehicles: {
         Row: {
           auction_grade: string | null
@@ -405,7 +363,6 @@ export type Database = {
           engine_cc: number | null
           exterior_color: string | null
           featured: boolean
-          hold_until: string | null
           fuel: string | null
           id: string
           interior_color: string | null
@@ -440,7 +397,6 @@ export type Database = {
           engine_cc?: number | null
           exterior_color?: string | null
           featured?: boolean
-          hold_until?: string | null
           fuel?: string | null
           id?: string
           interior_color?: string | null
@@ -475,7 +431,6 @@ export type Database = {
           engine_cc?: number | null
           exterior_color?: string | null
           featured?: boolean
-          hold_until?: string | null
           fuel?: string | null
           id?: string
           interior_color?: string | null
@@ -505,8 +460,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      expire_pending_bookings: { Args: { _vehicle_id?: string }; Returns: number }
-      extend_booking: { Args: { _booking_id: string }; Returns: string }
       get_customer_phones: {
         Args: { _user_ids: string[] }
         Returns: {
@@ -514,24 +467,7 @@ export type Database = {
           user_id: string
         }[]
       }
-      is_primary_owner: { Args: { _user_id: string }; Returns: boolean }
-      set_staff_access_password: { Args: { _account_password: string; _new_password: string }; Returns: string }
-      staff_access_password_changed_at: { Args: never; Returns: string | null }
-      verify_staff_access: { Args: { _input: string }; Returns: boolean | null }
       has_perm: { Args: { _perm: string; _user_id: string }; Returns: boolean }
-      my_inquiries: {
-        Args: never
-        Returns: {
-          created_at: string
-          id: string
-          kind: string
-          message: string | null
-          replied_at: string | null
-          reply: string | null
-          status: Database["public"]["Enums"]["inquiry_status"]
-          subject: string | null
-        }[]
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -540,6 +476,25 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_primary_owner: { Args: { _user_id: string }; Returns: boolean }
+      my_inquiries: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          replied_at: string
+          reply: string
+          status: Database["public"]["Enums"]["inquiry_status"]
+          subject: string
+        }[]
+      }
+      set_staff_access_password: {
+        Args: { _account_password: string; _new_password: string }
+        Returns: string
+      }
+      staff_access_password_changed_at: { Args: never; Returns: string }
       vehicle_facets: {
         Args: never
         Returns: {
@@ -547,6 +502,7 @@ export type Database = {
           model: string
         }[]
       }
+      verify_staff_access: { Args: { _input: string }; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "inventory_manager"
