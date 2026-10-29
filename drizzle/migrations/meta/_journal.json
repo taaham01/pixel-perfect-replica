@@ -36,6 +36,13 @@
       "when": 1791927123245,
       "tag": "0004_customer_ids_and_phone_privacy",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793232409369,
+      "tag": "0005_booking_approval_window",
+      "breakpoints": true
     }
   ]
 }
