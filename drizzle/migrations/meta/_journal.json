@@ -43,6 +43,13 @@
       "when": 1793232409369,
       "tag": "0005_booking_approval_window",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793232450316,
+      "tag": "0006_enable_pg_cron",
+      "breakpoints": true
     }
   ]
 }
