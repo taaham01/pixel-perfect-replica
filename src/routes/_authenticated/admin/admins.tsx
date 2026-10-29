@@ -9,6 +9,7 @@ import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { PasswordInput } from "@/components/site/PasswordInput";
 import { cn } from "@/lib/utils";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 export const Route = createFileRoute("/_authenticated/admin/admins")({
   beforeLoad: ({ context }) => { if (!context.admin.isSuper) throw redirect({ to: "/admin/inventory" }); },
@@ -67,7 +68,7 @@ function Admins() {
                     </span>
                     <span className="flex gap-2">
                       <button onClick={() => run(() => decideStaffRequest({ data: { userId: r.id, approve: true } }), `${r.email} approved`)} className={btn({ variant: "primary", size: "sm" })}><Check className="h-4 w-4" /> Approve</button>
-                      <button onClick={() => { if (window.confirm(`Reject and delete the request from ${r.email}?`)) void run(() => decideStaffRequest({ data: { userId: r.id, approve: false } }), "Request rejected"); }} className={btn({ variant: "outline", size: "sm" })}><X className="h-4 w-4" /> Reject</button>
+                      <button onClick={async () => { if (await confirmDialog({ title: "Reject this staff request?", description: "The sign-up request is rejected and the account is deleted.", details: [["Email", r.email]], confirmLabel: "Reject request", tone: "danger" })) void run(() => decideStaffRequest({ data: { userId: r.id, approve: false } }), "Request rejected"); }} className={btn({ variant: "outline", size: "sm" })}><X className="h-4 w-4" /> Reject</button>
                     </span>
                   </li>
                 ))}
@@ -114,13 +115,13 @@ function Admins() {
                     )}
                     {canManage && (
                       <button className="mt-1 flex items-center gap-1 text-xs text-crimson hover:underline"
-                        onClick={() => { if (window.confirm(`Remove ${s.email} from staff? They will lose all admin access.`)) void run(() => removeStaff({ data: { userId: s.id } }), "Removed from staff"); }}>
+                        onClick={async () => { if (await confirmDialog({ title: "Remove from staff?", description: "They will lose all admin access immediately.", details: [["Email", s.email]], confirmLabel: "Remove from staff", tone: "danger" })) void run(() => removeStaff({ data: { userId: s.id } }), "Removed from staff"); }}>
                         <UserMinus className="h-3 w-3" /> Remove from staff
                       </button>
                     )}
                     {canManage && me.isOwner && (
                       <button className="mt-1 flex items-center gap-1 text-xs text-crimson hover:underline"
-                        onClick={() => { if (window.confirm(`Permanently delete the account ${s.email}? This cannot be undone.`)) void run(() => deleteAccount({ data: { userId: s.id } }), "Account deleted"); }}>
+                        onClick={async () => { if (await confirmDialog({ title: "Delete this account?", description: "The account is deleted permanently. This cannot be undone.", details: [["Email", s.email]], confirmLabel: "Delete account", tone: "danger" })) void run(() => deleteAccount({ data: { userId: s.id } }), "Account deleted"); }}>
                         <Trash2 className="h-3 w-3" /> Delete account
                       </button>
                     )}

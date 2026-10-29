@@ -7,6 +7,7 @@ import { decideCustomer, listCustomerApprovals } from "@/lib/admin.functions";
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { cn } from "@/lib/utils";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 export const Route = createFileRoute("/_authenticated/admin/approvals")({
   head: () => ({ meta: [{ title: "Customer approvals — Admin" }, { name: "robots", content: "noindex" }] }),
@@ -43,8 +44,8 @@ function Approvals() {
     && (!term || [c.name, c.email, c.phone, c.customerNumber, c.country].some((v) => v.toLowerCase().includes(term))));
 
   async function act(c: Customer, action: "approve" | "revoke" | "decline") {
-    if (action === "decline" && !window.confirm(`Decline ${c.name || c.email}? Their account will be suspended and they won't be able to sign in.`)) return;
-    if (action === "revoke" && !window.confirm(`Take back approval for ${c.name || c.email}? They won't be able to book until approved again.`)) return;
+    if (action === "decline" && !(await confirmDialog({ title: "Decline this customer?", description: "Their account will be suspended and they won't be able to sign in.", details: [["Customer", c.name || "—"], ["Email", c.email]], confirmLabel: "Decline", tone: "danger" }))) return;
+    if (action === "revoke" && !(await confirmDialog({ title: "Take back approval?", description: "They won't be able to book cars until they're approved again.", details: [["Customer", c.name || "—"], ["Email", c.email]], confirmLabel: "Take back approval", tone: "danger" }))) return;
     setBusy(c.id);
     try {
       await decideCustomer({ data: { userId: c.id, action } });

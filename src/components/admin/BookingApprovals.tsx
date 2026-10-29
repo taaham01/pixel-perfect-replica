@@ -10,6 +10,7 @@ import { APPROVAL_HOURS, APPROVAL_MS, expireOverdueBookings, timeLeft, useNow } 
 import { CONTACT_METHODS } from "@/components/site/BookVehicle";
 import { btn } from "@/components/site/primitives";
 import { cn } from "@/lib/utils";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 type BStatus = Database["public"]["Enums"]["booking_status"];
 export const digits = (phone: string) => phone.replace(/\D/g, "");
@@ -131,14 +132,28 @@ export function AwaitingApprovals() {
                 {waiting > 0 && <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground"><BellRing className="h-3.5 w-3.5 text-crimson" />{waiting} other customer{waiting === 1 ? " is" : "s are"} waiting to hear if this car becomes available.</p>}
 
                 <div className="mt-auto flex flex-wrap gap-2 pt-4">
-                  <button disabled={isBusy || !left} onClick={() => { if (window.confirm(`Approve this booking? The ${v ? `${v.make} ${v.model}` : "car"} will be marked Reserved for ${c?.name || "this customer"}.`)) void update(b.id, { status: "confirmed" }, "Approved — the car is now reserved for this customer."); }}
+                  <button disabled={isBusy || !left} onClick={async () => {
+                    const ok = await confirmDialog({
+                      title: "Approve & reserve this car?", tone: "success", confirmLabel: "Approve & reserve",
+                      description: "The car will be marked Reserved in this customer's name and they'll get a message that their booking is approved.",
+                      details: [["Car", v ? `${v.year} ${v.make} ${v.model}` : "—"], ["Stock ID", v?.stock_id ?? "—"], ["Customer", c?.name || c?.email || "—"], ["Time left", left ? left.label : "Expired"]],
+                    });
+                    if (ok) void update(b.id, { status: "confirmed" }, "Approved — the car is now reserved for this customer.");
+                  }}
                     className={cn(btn({ variant: "primary", size: "sm" }), "disabled:opacity-50")}>
                     {isBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />} Approve &amp; reserve
                   </button>
                   <button disabled={isBusy} onClick={() => void extend(b.id)} className={btn({ variant: "outline", size: "sm" })}>
                     <TimerReset className="h-4 w-4" /> Extend +{APPROVAL_HOURS}h
                   </button>
-                  <button disabled={isBusy} onClick={() => { if (window.confirm("Reject this booking? The car becomes available to other customers.")) void update(b.id, { status: "cancelled" }, "Booking rejected — the car is available again."); }}
+                  <button disabled={isBusy} onClick={async () => {
+                    const ok = await confirmDialog({
+                      title: "Reject this booking?", tone: "danger", confirmLabel: "Reject booking",
+                      description: "The booking is cancelled and the car becomes available to other customers. Anyone waiting for this car gets a message.",
+                      details: [["Car", v ? `${v.year} ${v.make} ${v.model}` : "—"], ["Customer", c?.name || c?.email || "—"]],
+                    });
+                    if (ok) void update(b.id, { status: "cancelled" }, "Booking rejected — the car is available again.");
+                  }}
                     className={btn({ variant: "link", size: "sm" })}>
                     <X className="h-4 w-4" /> Reject
                   </button>

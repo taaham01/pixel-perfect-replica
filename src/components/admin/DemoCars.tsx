@@ -4,6 +4,7 @@ import { FlaskConical, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { btn } from "@/components/site/primitives";
 import { countDemoCars, loadDemoCars, removeDemoCars } from "@/lib/demo-inventory";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 /** Super Admin tool on the Inventory page: add or remove a set of test cars (stock IDs starting with DEMO-). */
 export function DemoCars() {
@@ -13,7 +14,7 @@ export function DemoCars() {
   const count = useQuery({ queryKey: ["admin", "demo-count"], queryFn: countDemoCars });
 
   async function run(kind: "load" | "remove") {
-    if (kind === "remove" && !window.confirm("Delete all DEMO- test cars, their photos and any bookings made on them?")) return;
+    if (kind === "remove" && !(await confirmDialog({ title: "Delete all demo cars?", description: "All DEMO- test cars, their photos and any bookings made on them will be deleted.", confirmLabel: "Delete demo cars", tone: "danger" }))) return;
     setBusy(kind);
     try {
       if (kind === "load") {

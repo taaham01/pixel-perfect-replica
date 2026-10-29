@@ -16,6 +16,7 @@ import { expireOverdueBookings, timeLeft, useNow } from "@/lib/bookings";
 import { AskQuestion } from "@/components/site/AskQuestion";
 import { vehiclePrice, mapVehicle } from "@/data/vehicles";
 import { cn } from "@/lib/utils";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 export const Route = createFileRoute("/_authenticated/account")({
   head: () => ({ meta: [{ title: `My Account — ${site.name}` }, { name: "robots", content: "noindex" }] }),
@@ -183,7 +184,7 @@ function Account() {
                     </p>
                     {b.staff_note && <p className="mt-2 rounded-sm bg-secondary/60 p-2 text-sm"><span className="font-semibold">Message from our team:</span> {b.staff_note}</p>}
                     {active && (
-                      <button onClick={() => { if (window.confirm("Cancel this booking?")) cancel.mutate(b.id); }} disabled={cancel.isPending} className={cn(btn({ variant: "link", size: "sm" }), "mt-1 h-auto py-1")}>
+                      <button onClick={async () => { if (await confirmDialog({ title: "Cancel this booking?", description: v ? `The ${v.year} ${v.make} ${v.model} will become available to other customers.` : "This booking will be cancelled.", confirmLabel: "Cancel booking", cancelLabel: "Keep booking", tone: "danger" })) cancel.mutate(b.id); }} disabled={cancel.isPending} className={cn(btn({ variant: "link", size: "sm" }), "mt-1 h-auto py-1")}>
                         <X className="h-4 w-4" /> Cancel booking
                       </button>
                     )}

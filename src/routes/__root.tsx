@@ -16,6 +16,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { WhatsAppButton } from "@/components/site/WhatsAppButton";
 import { Toaster } from "@/components/ui/sonner";
+import { ConfirmDialogHost } from "@/components/site/ConfirmDialog";
 import { site } from "@/config/site";
 import { useAuthState } from "@/lib/auth-store";
 import { useRouterState } from "@tanstack/react-router";
@@ -156,6 +157,7 @@ function RootComponent() {
         </>
       )}
       <Toaster position="top-center" />
+      <ConfirmDialogHost />
     </QueryClientProvider>
   );
 }

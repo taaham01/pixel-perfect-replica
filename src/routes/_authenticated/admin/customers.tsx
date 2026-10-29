@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { decideCustomer, deleteAccount, listCustomers, updateCustomer } from "@/lib/admin.functions";
 import { useAdmin } from "@/hooks/use-admin";
 import { btn } from "@/components/site/primitives";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 export const Route = createFileRoute("/_authenticated/admin/customers")({
   beforeLoad: ({ context }) => { if (!context.admin.perms.customers) throw redirect({ to: "/admin/inventory" }); },
@@ -22,7 +23,7 @@ function Customers() {
   }
 
   async function remove(userId: string, email: string) {
-    if (!window.confirm(`Permanently delete the account ${email} and their bookings? This cannot be undone.`)) return;
+    if (!(await confirmDialog({ title: "Delete this customer account?", description: "The account and all of its bookings are deleted permanently. This cannot be undone.", details: [["Account", email]], confirmLabel: "Delete account", tone: "danger" }))) return;
     try { await deleteAccount({ data: { userId } }); toast.success("Account deleted"); qc.invalidateQueries({ queryKey: ["admin", "customers"] }); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
   }

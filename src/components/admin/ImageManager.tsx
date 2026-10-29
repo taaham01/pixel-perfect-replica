@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { imageUrl, MAX_IMAGES, type VehicleImageRow } from "@/data/vehicles";
 import { cn } from "@/lib/utils";
 import { processAndUpload, removeStoredFiles, validateImageFile } from "./upload";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 interface QueueItem { key: string; file: File; preview: string; status: "queued" | "uploading" | "error"; progress: number; error?: string }
 export interface ImageManagerHandle { flush: (vehicleId: string) => Promise<number>; pendingCount: () => number }
@@ -102,7 +103,7 @@ export function ImageManager({ vehicleId, handle }: { vehicleId: string | null; 
   }
 
   async function remove(img: VehicleImageRow) {
-    if (!confirm("Remove this photo permanently?")) return;
+    if (!(await confirmDialog({ title: "Remove this photo?", description: "The photo is deleted permanently and can't be recovered.", confirmLabel: "Remove photo", tone: "danger" }))) return;
     setBusy(img.id);
     const { error } = await supabase.from("vehicle_images").delete().eq("id", img.id);
     if (!error) await removeStoredFiles([img.storage_path, img.thumb_path]);

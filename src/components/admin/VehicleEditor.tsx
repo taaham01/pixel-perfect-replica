@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { dbErrorMessage, rowToForm, validateVehicle, vehicleFields, type FieldDef } from "./fields";
 import { ImageManager, type ImageManagerHandle } from "./ImageManager";
 import { removeStoredFiles } from "./upload";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 const sections: { title: string; keys: string[] }[] = [
   { title: "Identity", keys: ["stock_id", "make", "model", "variant", "year", "chassis_number", "auction_grade"] },
@@ -61,7 +62,7 @@ export function VehicleEditor({ vehicle }: { vehicle?: VehicleRow }) {
   }
 
   async function destroy() {
-    if (!vehicle || !confirm(`Permanently delete ${vehicle.stock_id} and all its photos? This cannot be undone.`)) return;
+    if (!vehicle || !(await confirmDialog({ title: `Delete ${vehicle.stock_id}?`, description: "The vehicle and all its photos are deleted permanently. This cannot be undone.", details: [["Vehicle", `${vehicle.year} ${vehicle.make} ${vehicle.model}`], ["Stock ID", vehicle.stock_id]], confirmLabel: "Delete vehicle", tone: "danger" }))) return;
     setSaving("delete");
     const { data: imgs } = await supabase.from("vehicle_images").select("storage_path, thumb_path").eq("vehicle_id", vehicle.id);
     const { error } = await supabase.from("vehicles").delete().eq("id", vehicle.id);

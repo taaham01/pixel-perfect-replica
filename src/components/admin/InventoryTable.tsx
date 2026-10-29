@@ -10,6 +10,7 @@ import { btn } from "@/components/site/primitives";
 import { Pager, fieldCls } from "@/components/site/vehicles";
 import { cn } from "@/lib/utils";
 import { dbErrorMessage } from "./fields";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 export interface AdminFilters { q?: string; status?: string; state?: string; make?: string; model?: string; year?: number; page?: number }
 const PER = 25;
@@ -47,7 +48,9 @@ export function InventoryTable({ filters, onChange, lockStatus }: { filters: Adm
   const toggle = (id: string) => setSel((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   async function bulk(patch: { status?: VehicleStatus; publish_state?: PublishState }, label: string) {
-    if (!sel.size || !confirm(`${label} ${sel.size} vehicle(s)?`)) return;
+    if (!sel.size) return;
+    const danger = patch.publish_state === "archived" || patch.status === "sold";
+    if (!(await confirmDialog({ title: `${label} ${sel.size} vehicle${sel.size === 1 ? "" : "s"}?`, description: "This change applies to every selected vehicle.", confirmLabel: label, tone: danger ? "danger" : "primary" }))) return;
     setBusy(true);
     const { error } = await supabase.from("vehicles").update(patch).in("id", [...sel]);
     setBusy(false);

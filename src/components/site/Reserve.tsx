@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { APPROVAL_HOURS, bookingErrorMessage, isUnderProcess, useNow } from "@/lib/bookings";
 import { NotifyMeButton, UnderProcessTag } from "./WatchCar";
 import { btn } from "./primitives";
+import { confirmDialog } from "./ConfirmDialog";
 
 /**
  * Who can reserve, and which cars this customer already holds.
@@ -86,7 +87,13 @@ export function ReserveOnCard({ vehicleId, status, holdUntil, name }: { vehicleI
     <button
       type="button"
       disabled={r.reserve.isPending}
-      onClick={() => { if (window.confirm(`Book the ${name}? It will be held for you while our team approves the booking (within ${APPROVAL_HOURS} hours).`)) r.reserve.mutate({ vehicleId }); }}
+      onClick={async () => {
+        const ok = await confirmDialog({
+          title: `Book the ${name}?`, confirmLabel: "Book this car",
+          description: `The car is held for you while our team approves your booking. If it isn't approved within ${APPROVAL_HOURS} hours, it's cancelled automatically. Booking is free and you can cancel any time.`,
+        });
+        if (ok) r.reserve.mutate({ vehicleId });
+      }}
       className={cn(btn({ variant: "primary", size: "sm" }), "mt-3 w-full")}
     >
       {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarCheck className="h-4 w-4" />} Book this car

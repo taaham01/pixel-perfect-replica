@@ -12,6 +12,7 @@ import { ApprovalPending } from "./ApprovalStatus";
 import { btn } from "./primitives";
 import { fieldCls } from "./vehicles";
 import { NotifyMeButton, UnderProcessTag } from "./WatchCar";
+import { confirmDialog } from "./ConfirmDialog";
 
 export const CONTACT_METHODS = [
   { id: "whatsapp", label: "WhatsApp" },
@@ -149,7 +150,7 @@ export function BookVehicle({ vehicleId, vehicleName, vehicleStatus, holdUntil }
         {existing.data.staff_note && <p className="mt-3 rounded-sm bg-secondary/60 p-3 text-sm"><span className="font-semibold">Message from our team:</span> {existing.data.staff_note}</p>}
         <div className="mt-4 flex flex-wrap gap-3">
           <Link to="/account" className={btn({ variant: "outline", size: "sm" })}>My bookings</Link>
-          <button onClick={() => { if (window.confirm("Cancel your booking for this car? It will become available to other customers.")) cancel.mutate(existing.data!.id); }} disabled={cancel.isPending} className={btn({ variant: "link", size: "sm" })}>
+          <button onClick={async () => { if (await confirmDialog({ title: "Cancel your booking?", description: `${vehicleName} will become available to other customers.`, confirmLabel: "Cancel booking", cancelLabel: "Keep booking", tone: "danger" })) cancel.mutate(existing.data!.id); }} disabled={cancel.isPending} className={btn({ variant: "link", size: "sm" })}>
             {cancel.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />} Cancel booking
           </button>
         </div>

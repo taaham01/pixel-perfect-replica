@@ -8,6 +8,7 @@ import { AwaitingApprovals, digits, money, useAdminBookings, useBookingActions }
 import { btn } from "@/components/site/primitives";
 import { fieldCls } from "@/components/site/vehicles";
 import { cn } from "@/lib/utils";
+import { confirmDialog } from "@/components/site/ConfirmDialog";
 
 type BStatus = Database["public"]["Enums"]["booking_status"];
 const STATUS_OPTIONS: { id: BStatus; label: string }[] = [
@@ -114,9 +115,11 @@ function Bookings() {
                     {b.status === "pending" && <span className="inline-flex items-center gap-1 text-xs font-semibold text-crimson"><Clock className="h-3.5 w-3.5" />{left ? `${left.label} left` : "Expired"}</span>}
                     <span className={cn("rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider", tone[b.status])}>{STATUS_OPTIONS.find((s) => s.id === b.status)?.label}</span>
                     <select value={b.status} disabled={busy === b.id}
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const next = e.target.value as BStatus;
-                        if (next === "completed" && !window.confirm("Mark this sale as completed? The car will be marked Sold.")) return;
+                        const car = v ? `${v.year} ${v.make} ${v.model}` : "—";
+                        if (next === "completed" && !(await confirmDialog({ title: "Mark this sale as completed?", description: "The car will be marked Sold and removed from the available inventory.", details: [["Car", car], ["Customer", c?.name || c?.email || "—"]], confirmLabel: "Mark as sold", tone: "success" }))) return;
+                        if (next === "cancelled" && !(await confirmDialog({ title: "Cancel this booking?", description: "The car becomes available to other customers and the customer gets a message.", details: [["Car", car], ["Customer", c?.name || c?.email || "—"]], confirmLabel: "Cancel booking", cancelLabel: "Keep booking", tone: "danger" }))) return;
                         void update(b.id, { status: next }, next === "confirmed" ? "Approved — the car is now reserved." : next === "completed" ? "Completed — the car is now sold." : next === "cancelled" ? "Booking cancelled." : `Back to pending — ${APPROVAL_HOURS}h approval window restarted.`);
                       }}
                       className="rounded-sm border border-border bg-background px-2 py-1 text-sm">
